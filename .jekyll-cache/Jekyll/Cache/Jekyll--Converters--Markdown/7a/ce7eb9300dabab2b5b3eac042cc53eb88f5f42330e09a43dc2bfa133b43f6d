@@ -1,0 +1,1069 @@
+I"��<blockquote>
+  <p>代码来自https://github.com/drcoms/drcom-generic，我稍微改了点，方便懒人在Win-PC上面直接跑</p>
+</blockquote>
+
+<p>Drcom正版是一个刚需软件,但它默认不能开热点,就很难受.</p>
+
+<p>于是就有大佬抓包分析写出了Drcom破解版,破解版基本能够替代正版的功能,无论是登录,心跳包都能构造出来,使用起来很快乐.但是GitHub上的代码转化为能用的程序之间,有一定的工作量,即使有wiki的指导,抓包等配置步骤也有一定难度.</p>
+
+<p>所以,即使以我这么懒的人,都舍小懒,为大懒,封装出了一个懒人版.(Windows版是封装好了的,如果你用的mac或linux系,需要自己运行python脚本)</p>
+
+<p>Feature:</p>
+<ul>
+  <li>电脑可以开热点 (继承自Github大佬破解版)</li>
+  <li>电脑无需安装python,或者其他任何环境 (代价是软件有3.6MB)</li>
+  <li>有一个我自认为比原版好看一点点的中文界面</li>
+  <li>无需配置,开包即用,按提示输入帐号密码即可</li>
+  <li>无广告,但卸载后可能会在”我的文档”文件夹下残留一个用来保存你帐号密码的txt</li>
+</ul>
+
+<p><strong>使用步骤</strong>:</p>
+<ol>
+  <li>下载软件</li>
+  <li>关闭正版Drcom</li>
+  <li>双击打开懒人Drcom</li>
+  <li>输入帐号,密码(第二次就不用了)</li>
+  <li>卸载方法:直接删除下载下来那个exe</li>
+</ol>
+
+<h1 id="windows版点击此处下载exe"><a href="http://file.loopy.tech/release/drcom/drcom_WIN3.exe">Windows版点击此处下载exe</a></h1>
+<h1 id="maclinux版点击此处下载py"><a href="http://file.loopy.tech/release/drcom/drcom_3.py">Mac,linux版点击此处下载py</a></h1>
+<hr />
+<h2 id="使用者可以不用往下看了">使用者可以不用往下看了</h2>
+
+<ul>
+  <li>
+    <p><a href="https://github.com/drcoms/drcom-generic/wiki/d%E7%89%88%E7%AE%80%E7%95%A5%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E">大佬破解版的wiki</a></p>
+  </li>
+  <li>
+    <p><a href="https://github.com/drcoms/drcom-generic">源项目地址</a></p>
+  </li>
+</ul>
+
+<p>以下为drcom_WIN3.py的源码</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># -*- coding: gbk -*-
+</span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">socket</span><span class="p">,</span> <span class="n">struct</span><span class="p">,</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">md5</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">_winreg</span>
+<span class="k">global</span> <span class="n">DEBUG</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">'''
+  _____                          ______                     _
+ |  __ </span><span class="err">\</span><span class="s">                        |  ____|                   | |
+ | |  | |_ __ ___ ___  _ __ ___ | |__  __  _____  ___ _   _| |_ ___  _ __
+ | |  | | '__/ __/ _ </span><span class="err">\</span><span class="s">| '_ ` _ </span><span class="err">\</span><span class="s">|  __| </span><span class="err">\</span><span class="s"> </span><span class="err">\</span><span class="s">/ / _ </span><span class="err">\</span><span class="s">/ __| | | | __/ _ </span><span class="err">\</span><span class="s">| '__|
+ | |__| | | | (_| (_) | | | | | | |____ &gt;  &lt;  __/ (__| |_| | || (_) | |
+ |_____/|_|  </span><span class="err">\</span><span class="s">___</span><span class="err">\</span><span class="s">___/|_| |_| |_|______/_/</span><span class="err">\</span><span class="s">_</span><span class="err">\</span><span class="s">___|</span><span class="err">\</span><span class="s">___|</span><span class="err">\</span><span class="s">__,_|</span><span class="err">\</span><span class="s">__</span><span class="err">\</span><span class="s">___/|_|
+
+
+'''</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Version:WIN_3</span><span class="se">\n</span><span class="s">Code fork from：https://github.com/drcoms/drcom-generic"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"=================================================================@LoopyTech"</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_desktop</span><span class="p">():</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">_winreg</span><span class="o">.</span><span class="n">OpenKey</span><span class="p">(</span><span class="n">_winreg</span><span class="o">.</span><span class="n">HKEY_CURRENT_USER</span><span class="p">,</span><span class="s">r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_winreg</span><span class="o">.</span><span class="n">QueryValueEx</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s">"Personal"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">"./drcom_userdata"</span><span class="p">):</span>
+    <span class="n">filepath</span> <span class="o">=</span><span class="s">"./drcom_userdata"</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">filepath</span><span class="o">=</span><span class="n">get_desktop</span><span class="p">()</span><span class="o">+</span><span class="s">"/drcom_userdata"</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="nb">buffer</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">DEBUG</span> <span class="o">=</span> <span class="nb">buffer</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">" "</span><span class="p">)</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">DEBUG</span> <span class="o">==</span> <span class="s">"True"</span><span class="p">:</span>
+            <span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">DEBUG</span> <span class="o">==</span> <span class="s">"False"</span><span class="p">:</span>
+            <span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ERROR</span><span class="p">(</span><span class="s">"drcom_userdata已损坏"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[成功] 从我的文档的drcom_userdata读取到了帐号密码"</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[警告] 我的文档文件夹下的drcom_userdata已损坏，请先手动删除"</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="s">"# 输入帐号: "</span><span class="p">))</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="s">"# 输入密码: "</span><span class="p">))</span>
+        <span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s">'w'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">"{} {} {}"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">False</span><span class="p">)))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[成功] 帐号密码信息保存到了我的文档中的drcom_userdata.下次登录无需再输入密码了"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"       若不想保存帐号密码，请手动删除drcom_userdata文件"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[警告] 无法从我的文档中读取drcom_userdata"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+
+<span class="n">server</span> <span class="o">=</span> <span class="s">'10.254.7.4'</span>
+<span class="n">CONTROLCHECKSTATUS</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x20</span><span class="s">'</span>
+<span class="n">ADAPTERNUM</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x04</span><span class="s">'</span>
+<span class="n">host_ip</span> <span class="o">=</span> <span class="s">'10.251.94.26'</span>
+<span class="n">IPDOG</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x01</span><span class="s">'</span>
+<span class="n">host_name</span> <span class="o">=</span> <span class="s">'GILIGILIEYE'</span>
+<span class="n">PRIMARY_DNS</span> <span class="o">=</span> <span class="s">'202.202.0.33'</span>
+<span class="n">dhcp_server</span> <span class="o">=</span> <span class="s">'10.253.7.77'</span>
+<span class="n">AUTH_VERSION</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x25\x00</span><span class="s">'</span>
+<span class="n">mac</span> <span class="o">=</span> <span class="mh">0x54e1ad0743be</span>
+<span class="n">host_os</span> <span class="o">=</span> <span class="s">'NOTE7'</span>
+<span class="n">KEEP_ALIVE_VERSION</span> <span class="o">=</span> <span class="s">'</span><span class="se">\xdc\x02</span><span class="s">'</span>
+<span class="n">ror_version</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="n">nic_name</span> <span class="o">=</span> <span class="s">'lee'</span>
+<span class="n">bind_ip</span> <span class="o">=</span> <span class="s">'0.0.0.0'</span>
+
+
+<span class="k">class</span> <span class="nc">ChallengeException</span><span class="p">(</span><span class="nb">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">LoginException</span><span class="p">(</span><span class="nb">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">tt</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">input_str</span> <span class="o">=</span> <span class="s">""</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">input_kb</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">input_kb</span> <span class="o">==</span> <span class="s">""</span><span class="p">:</span>  <span class="c1"># continue
+</span>                <span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"==========================================================================="</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"3秒后自动退出"</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_str</span> <span class="o">=</span> <span class="n">input_kb</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_str</span> <span class="o">=</span> <span class="n">input_kb</span>
+
+
+<span class="k">def</span> <span class="nf">bind_nic</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">fcntl</span>
+        <span class="k">def</span> <span class="nf">get_ip_address</span><span class="p">(</span><span class="n">ifname</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">socket</span><span class="o">.</span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">fcntl</span><span class="o">.</span><span class="n">ioctl</span><span class="p">(</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span>
+                <span class="mh">0x8915</span><span class="p">,</span>  <span class="c1"># SIOCGIFADDR
+</span>                <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">'256s'</span><span class="p">,</span> <span class="n">ifname</span><span class="p">[:</span><span class="mi">15</span><span class="p">])</span>
+            <span class="p">)[</span><span class="mi">20</span><span class="p">:</span><span class="mi">24</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">get_ip_address</span><span class="p">(</span><span class="n">nic_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">'0.0.0.0'</span>
+    <span class="k">except</span> <span class="nb">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">'0.0.0.0'</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">'0.0.0.0'</span>
+
+
+<span class="k">if</span> <span class="n">nic_name</span> <span class="o">!=</span> <span class="s">''</span><span class="p">:</span>
+    <span class="n">bind_ip</span> <span class="o">=</span> <span class="n">bind_nic</span><span class="p">()</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+    <span class="c1"># s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+</span>    <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">((</span><span class="n">bind_ip</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"[错误] 无法同时打开两个Drcom认证软件（也可能是另一个软件未完全退出，推荐重启）"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"==========================================================================="</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"5秒后自动退出"</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+    <span class="nb">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">IS_TEST</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="c1"># specified fields based on version
+</span><span class="n">CONF</span> <span class="o">=</span> <span class="s">"./drcom.conf"</span>
+<span class="n">UNLIMITED_RETRY</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">EXCEPTION</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="c1"># log saves to file
+</span><span class="n">LOG_PATH</span> <span class="o">=</span> <span class="s">'./drcom_client.log'</span>
+
+
+<span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">DEBUG</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="s">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">LOG_PATH</span><span class="p">,</span> <span class="s">'a'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">challenge</span><span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="n">ran</span><span class="p">):</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">"&lt;H"</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">ran</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="mh">0xFFFF</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="s">"</span><span class="se">\x01\x02</span><span class="s">"</span> <span class="o">+</span> <span class="n">t</span> <span class="o">+</span> <span class="s">"</span><span class="se">\x09</span><span class="s">"</span> <span class="o">+</span> <span class="s">"</span><span class="se">\x00</span><span class="s">"</span> <span class="o">*</span> <span class="mi">15</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[challenge] recv'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[challenge] timeout, retrying...'</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"[失败] Connect timeout"</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ERROR</span><span class="p">(</span><span class="s">"Connect timeout"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">address</span> <span class="o">==</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">continue</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[DEBUG] challenge:</span><span class="se">\n</span><span class="s">'</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">'</span><span class="se">\x02</span><span class="s">'</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ChallengeException</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[challenge] challenge packet sent.'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">md5sum</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">md5</span><span class="p">()</span>
+    <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="s">'</span><span class="si">%</span><span class="s">x'</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">'0'</span> <span class="o">+</span> <span class="n">s</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">ror</span><span class="p">(</span><span class="n">md5</span><span class="p">,</span> <span class="n">pwd</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="s">''</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">)):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">md5</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">^</span> <span class="nb">ord</span><span class="p">(</span><span class="n">pwd</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">ret</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(((</span><span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">keep_alive_package_builder</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">random</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">first</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="n">number</span><span class="p">)</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x28\x00\x0b</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">first</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x0f\x27</span><span class="s">'</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="n">KEEP_ALIVE_VERSION</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x2f\x12</span><span class="s">'</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">6</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">tail</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>
+    <span class="c1"># data += struct.pack("!H",0xdc02)
+</span>    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">foo</span> <span class="o">=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">host_ip</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span>  <span class="c1"># host_ip
+</span>        <span class="c1"># CRC
+</span>        <span class="c1"># edited on 2014/5/12, filled zeros to checksum
+</span>        <span class="c1"># crc = packet_CRC(data+foo)
+</span>        <span class="n">crc</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>
+        <span class="c1"># data += struct.pack("!I",crc) + foo + '\x00' * 8
+</span>        <span class="n">data</span> <span class="o">+=</span> <span class="n">crc</span> <span class="o">+</span> <span class="n">foo</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">8</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># packet type = 1
+</span>        <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">16</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="c1"># def packet_CRC(s):
+#     ret = 0
+#     for i in re.findall('..', s):
+#         ret ^= struct.unpack('&gt;h', i)[0]
+#         ret &amp;= 0xFFFF
+#     ret = ret * 0x2c7
+#     return ret
+</span>
+<span class="k">def</span> <span class="nf">keep_alive2</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="c1"># first keep_alive:
+</span>    <span class="c1"># number = number (mod 7)
+</span>    <span class="c1"># status = 1: first packet user sended
+</span>    <span class="c1">#         2: first packet user recieved
+</span>    <span class="c1">#         3: 2nd packet user sended
+</span>    <span class="c1">#         4: 2nd packet user recieved
+</span>    <span class="c1">#   Codes for test
+</span>    <span class="n">my_t</span> <span class="o">=</span> <span class="n">tt</span><span class="p">()</span>
+    <span class="n">my_t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="s">''</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="s">''</span>
+    <span class="n">svr</span> <span class="o">=</span> <span class="n">server</span>
+    <span class="n">ran</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0xFFFF</span><span class="p">)</span>
+    <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># 2014/10/15 add by latyas, maybe svr sends back a file packet
+</span>    <span class="n">svr_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span> <span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] send1'</span><span class="p">,</span> <span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv1'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">'</span><span class="se">\x07\x00\x28\x00</span><span class="s">'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">'</span><span class="se">\x07</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="n">svr_num</span><span class="p">)</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x28\x00</span><span class="s">'</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x10</span><span class="s">'</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv file, resending..'</span><span class="p">)</span>
+            <span class="n">svr_num</span> <span class="o">=</span> <span class="n">svr_num</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span> <span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv1/unexpected'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="c1"># log('[keep-alive2] recv1',data.encode('hex'))
+</span>
+    <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span> <span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] send2'</span><span class="p">,</span> <span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span><span class="p">:</span>
+            <span class="n">svr_num</span> <span class="o">=</span> <span class="n">svr_num</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv2/unexpected'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv2'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+
+    <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span> <span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span> <span class="n">tail</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] send3'</span><span class="p">,</span> <span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span><span class="p">:</span>
+            <span class="n">svr_num</span> <span class="o">=</span> <span class="n">svr_num</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv3/unexpected'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv3'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">"[keep-alive2] keep-alive2 loop was in daemon."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">check_update</span><span class="p">():</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[成功] 成功连接到互联网."</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[警告] 网络连接可能失败."</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">[程序运行中] 敲击回车键以退出，请勿关闭该窗口"</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">svr_num</span>
+    <span class="n">timeout_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="n">tail</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 4\n',packet.encode('hex'))
+</span>            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] send'</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] recv'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 4 return\n',data.encode('hex'))
+</span>
+            <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="n">tail</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 5\n',packet.encode('hex'))
+</span>            <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] send'</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] recv'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 5 return\n',data.encode('hex'))
+</span>            <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0xFF</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+            <span class="n">keep_alive1</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">timeout_count</span> <span class="o">=</span><span class="mi">0</span>
+            <span class="k">if</span> <span class="n">flag</span> <span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"                                  "</span><span class="p">,</span><span class="n">end</span><span class="o">=</span><span class="s">"</span><span class="se">\r</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">my_t</span><span class="o">.</span><span class="n">input_str</span><span class="o">==</span><span class="s">"c"</span><span class="p">:</span>
+                <span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+             <span class="k">if</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">==</span><span class="s">"timed out"</span><span class="p">):</span>
+                  <span class="k">print</span><span class="p">(</span><span class="s">"({})[警告] 网络重连中"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">timeout_count</span><span class="p">)),</span><span class="n">end</span><span class="o">=</span><span class="s">"</span><span class="se">\r</span><span class="s">"</span><span class="p">)</span>
+                  <span class="n">flag</span> <span class="o">=</span><span class="mi">1</span>
+             <span class="k">else</span><span class="p">:</span>
+                  <span class="k">print</span><span class="p">(</span><span class="s">"[警告] "</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span><span class="n">end</span><span class="o">=</span><span class="s">"</span><span class="se">\r</span><span class="s">"</span><span class="p">)</span>
+             <span class="k">if</span> <span class="n">timeout_count</span><span class="o">&gt;</span><span class="mi">30</span><span class="p">:</span>
+                  <span class="k">print</span><span class="p">(</span><span class="s">"[错误] 连接丢失                                 </span><span class="se">\n</span><span class="s">==========================================================================="</span><span class="p">)</span>
+                  <span class="k">print</span><span class="p">(</span><span class="s">"3秒后自动退出"</span><span class="p">)</span>
+                  <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                  <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>               
+             <span class="n">timeout_count</span><span class="o">+=</span><span class="mi">1</span>
+             <span class="k">pass</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<span class="k">def</span> <span class="nf">checksum</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="mi">1234</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">'....'</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">^=</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1968</span> <span class="o">*</span> <span class="n">ret</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">'&lt;I'</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">mkpkt</span><span class="p">(</span><span class="n">salt</span><span class="p">,</span> <span class="n">usr</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">mac</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x03\x01\x00</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">usr</span><span class="p">)</span> <span class="o">+</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">md5sum</span><span class="p">(</span><span class="s">'</span><span class="se">\x03\x01</span><span class="s">'</span> <span class="o">+</span> <span class="n">salt</span> <span class="o">+</span> <span class="n">pwd</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">usr</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">CONTROLCHECKSTATUS</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">ADAPTERNUM</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">dump</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span> <span class="o">^</span> <span class="n">mac</span><span class="p">)</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">)</span>  <span class="c1"># mac xor md51
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">md5sum</span><span class="p">(</span><span class="s">"</span><span class="se">\x01</span><span class="s">"</span> <span class="o">+</span> <span class="n">pwd</span> <span class="o">+</span> <span class="n">salt</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># md52
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x01</span><span class="s">'</span>  <span class="c1"># number of ip
+</span>    <span class="c1"># data += '\x0a\x1e\x16\x11' #your ip address1, 10.30.22.17
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">host_ip</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span>  <span class="c1"># x.x.x.x -&gt;
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># your ipaddress 2
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># your ipaddress 3
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># your ipaddress 4
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">md5sum</span><span class="p">(</span><span class="n">data</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x14\x00\x07\x0b</span><span class="s">'</span><span class="p">)[:</span><span class="mi">8</span><span class="p">]</span>  <span class="c1"># md53
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">IPDOG</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># delimeter
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">host_name</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">PRIMARY_DNS</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span>  <span class="c1"># primary dns
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dhcp_server</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span>  <span class="c1"># DHCP server
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00\x00\x00\x00</span><span class="s">'</span>  <span class="c1"># secondary dns:0.0.0.0
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">8</span>  <span class="c1"># delimeter
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x94\x00\x00\x00</span><span class="s">'</span>  <span class="c1"># unknow
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x06\x00\x00\x00</span><span class="s">'</span>  <span class="c1"># os major
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x02\x00\x00\x00</span><span class="s">'</span>  <span class="c1"># os minor
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\xf0\x23\x00\x00</span><span class="s">'</span>  <span class="c1"># OS build
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x02\x00\x00\x00</span><span class="s">'</span>  <span class="c1"># os unknown
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x44\x72\x43\x4f\x4d\x00\xcf\x07\x68</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">55</span>  <span class="c1"># unknown string
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x33\x64\x63\x37\x39\x66\x35\x32\x31\x32\x65\x38\x31\x37\x30\x61\x63\x66\x61\x39\x65\x63\x39\x35\x66\x31\x64\x37\x34\x39\x31\x36\x35\x34\x32\x62\x65\x37\x62\x31</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">24</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">AUTH_VERSION</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">))</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">ror</span><span class="p">(</span><span class="n">md5sum</span><span class="p">(</span><span class="s">'</span><span class="se">\x03\x01</span><span class="s">'</span> <span class="o">+</span> <span class="n">salt</span> <span class="o">+</span> <span class="n">pwd</span><span class="p">),</span> <span class="n">pwd</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x02\x0c</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">checksum</span><span class="p">(</span><span class="n">data</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x01\x26\x07\x11\x00\x00</span><span class="s">'</span> <span class="o">+</span> <span class="n">dump</span><span class="p">(</span><span class="n">mac</span><span class="p">))</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00\x00</span><span class="s">'</span>  <span class="c1"># delimeter
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">dump</span><span class="p">(</span><span class="n">mac</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># strange。。。
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x60\xa2</span><span class="s">'</span>  <span class="c1"># unknown, filled numbers randomly =w=
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">28</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[mkpkt]'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">usr</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">svr</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">random</span>
+    <span class="k">global</span> <span class="n">SALT</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">salt</span> <span class="o">=</span> <span class="n">challenge</span><span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mh">0xF</span><span class="p">,</span> <span class="mh">0xFF</span><span class="p">))</span>
+        <span class="n">SALT</span> <span class="o">=</span> <span class="n">salt</span>
+        <span class="n">packet</span> <span class="o">=</span> <span class="n">mkpkt</span><span class="p">(</span><span class="n">salt</span><span class="p">,</span> <span class="n">usr</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">mac</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[login] send'</span><span class="p">,</span> <span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[login] recv'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[login] packet sent.'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">address</span> <span class="o">==</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x04</span><span class="s">'</span><span class="p">:</span>
+                <span class="n">log</span><span class="p">(</span><span class="s">'[login] loged in'</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"[成功] {}已成功登录"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">usr</span><span class="p">)))</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"[失败] 尝试通过{}来登录失败"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">usr</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="n">ERROR</span><span class="p">(</span><span class="s">"login failed"</span><span class="p">)</span>
+                <span class="n">log</span><span class="p">(</span><span class="s">'[login] login failed.'</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">IS_TEST</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+                <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">UNLIMITED_RETRY</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="n">log</span><span class="p">(</span><span class="s">'[login] exception occured.'</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ERROR</span><span class="p">(</span><span class="s">"login exception occured"</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+    <span class="n">log</span><span class="p">(</span><span class="s">'[login] login sent'</span><span class="p">)</span>
+    <span class="c1"># 0.8 changed:
+</span>    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">23</span><span class="p">:</span><span class="mi">39</span><span class="p">]</span>
+    <span class="c1"># return data[-22:-6]
+</span>
+
+<span class="k">def</span> <span class="nf">keep_alive1</span><span class="p">(</span><span class="n">salt</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">svr</span><span class="p">):</span>
+    <span class="n">foo</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">'!H'</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">%</span> <span class="mh">0xFFFF</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s">'</span><span class="se">\xff</span><span class="s">'</span> <span class="o">+</span> <span class="n">md5sum</span><span class="p">(</span><span class="s">'</span><span class="se">\x03\x01</span><span class="s">'</span> <span class="o">+</span> <span class="n">salt</span> <span class="o">+</span> <span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00\x00\x00</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">tail</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">foo</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00\x00\x00\x00</span><span class="s">'</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive1] send'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+
+    <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive1]recv/not expected'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive1] recv'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">empty_socket_buffer</span><span class="p">():</span>
+    <span class="c1"># empty buffer for some fucking schools
+</span>    <span class="n">log</span><span class="p">(</span><span class="s">'starting to empty socket buffer'</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'recived sth unexpected'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s">''</span><span class="p">:</span>
+                <span class="k">break</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="c1"># get exception means it has done.
+</span>        <span class="n">log</span><span class="p">(</span><span class="s">'exception in empty_socket_buffer'</span><span class="p">)</span>
+        <span class="k">pass</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'emptyed'</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">daemon</span><span class="p">():</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">'/var/run/jludrcom.pid'</span><span class="p">,</span> <span class="s">'w'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+
+
+<span class="k">def</span> <span class="nf">check_update</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">address</span> <span class="o">=</span> <span class="s">'loopy.tech'</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="mi">6666</span>
+        <span class="n">buffsize</span> <span class="o">=</span> <span class="mi">1024</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">address</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+
+        <span class="n">senddata</span> <span class="o">=</span> <span class="s">"Hello,Server. I'm drcom-3.py"</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">senddata</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+        <span class="n">recvdata</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">buffsize</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">'utf-8'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">recvdata</span> <span class="o">==</span> <span class="s">"Hi"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">recvdata</span> <span class="o">==</span> <span class="s">"You can update"</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"[警告] 新版本已可供下载，可见（http://file.loopy.tech/release/drcom.html）"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">IS_TEST</span><span class="p">:</span>
+        <span class="n">daemon</span><span class="p">()</span>
+        <span class="nb">execfile</span><span class="p">(</span><span class="n">CONF</span><span class="p">,</span> <span class="nb">globals</span><span class="p">())</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">"auth svr:"</span> <span class="o">+</span> <span class="n">server</span> <span class="o">+</span> <span class="s">"</span><span class="se">\n</span><span class="s">username:"</span> <span class="o">+</span> <span class="n">username</span> <span class="o">+</span> <span class="s">"</span><span class="se">\n</span><span class="s">password:"</span> <span class="o">+</span> <span class="n">password</span> <span class="o">+</span> <span class="s">"</span><span class="se">\n</span><span class="s">mac:"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">mac</span><span class="p">)))</span>
+    <span class="n">log</span><span class="p">(</span><span class="n">bind_ip</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">package_tail</span> <span class="o">=</span> <span class="n">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">LoginException</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'package_tail'</span><span class="p">,</span> <span class="n">package_tail</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="c1"># keep_alive1 is fucking bullshit!
+</span>        <span class="n">empty_socket_buffer</span><span class="p">()</span>
+        <span class="n">keep_alive1</span><span class="p">(</span><span class="n">SALT</span><span class="p">,</span> <span class="n">package_tail</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+        <span class="n">keep_alive2</span><span class="p">(</span><span class="n">SALT</span><span class="p">,</span> <span class="n">package_tail</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">()</span>
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="o">==</span> <span class="s">"[Errno 101] Network is unreachable"</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"[失败] 找不到网线连接</span><span class="se">\n</span><span class="s">==========================================================================="</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"5秒后自动退出"</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[失败] ERROR: "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"If you meet unsolveable problem, you can find LoopyTech for help. </span><span class="se">\n</span><span class="s">    @57658689098a@gmail.com"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"==========================================================================="</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"5秒后自动退出"</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>以下为Drcom_WIN2的源码</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+</span><span class="kn">import</span> <span class="nn">socket</span><span class="p">,</span> <span class="n">struct</span><span class="p">,</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">md5</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="k">global</span> <span class="n">DEBUG</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"====================DRCOM======================"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Welcome to DrcomPortable@LOOPY.TECH</span><span class="se">\n</span><span class="s">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">"./user.conf"</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">'./user.conf'</span><span class="p">,</span><span class="s">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="nb">buffer</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">username</span><span class="p">,</span><span class="n">password</span><span class="p">,</span><span class="n">DEBUG</span> <span class="o">=</span> <span class="nb">buffer</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">" "</span><span class="p">)</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">DEBUG</span> <span class="o">==</span><span class="s">"True"</span><span class="p">:</span>
+            <span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">DEBUG</span> <span class="o">==</span> <span class="s">"False"</span><span class="p">:</span>
+            <span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ERROR</span><span class="p">(</span><span class="s">"user.conf is damaged"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[SUCCESS] Get login information from user.conf"</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[WARNING] user.conf is damaged,please remove it."</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="s">"Input username: "</span><span class="p">))</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span><span class="s">"Input password："</span><span class="p">))</span>
+        <span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"./user.conf"</span><span class="p">,</span><span class="s">'w'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">"{} {} {}"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">username</span><span class="p">,</span><span class="n">password</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="bp">False</span><span class="p">)))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[SUCCESS] Login information save to user.conf."</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"          You can remove it if don't want to save it."</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">r</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[WARNING] Unable to save data to user.conf."</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+<span class="n">server</span> <span class="o">=</span> <span class="s">'10.254.7.4'</span>
+<span class="n">CONTROLCHECKSTATUS</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x20</span><span class="s">'</span>
+<span class="n">ADAPTERNUM</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x04</span><span class="s">'</span>
+<span class="n">host_ip</span> <span class="o">=</span> <span class="s">'10.251.94.26'</span>
+<span class="n">IPDOG</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x01</span><span class="s">'</span>
+<span class="n">host_name</span> <span class="o">=</span> <span class="s">'GILIGILIEYE'</span>
+<span class="n">PRIMARY_DNS</span> <span class="o">=</span> <span class="s">'202.202.0.33'</span>
+<span class="n">dhcp_server</span> <span class="o">=</span> <span class="s">'10.253.7.77'</span>
+<span class="n">AUTH_VERSION</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x25\x00</span><span class="s">'</span>
+<span class="n">mac</span> <span class="o">=</span> <span class="mh">0x54e1ad0743be</span>
+<span class="n">host_os</span> <span class="o">=</span> <span class="s">'NOTE7'</span>
+<span class="n">KEEP_ALIVE_VERSION</span> <span class="o">=</span> <span class="s">'</span><span class="se">\xdc\x02</span><span class="s">'</span>
+<span class="n">ror_version</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="n">nic_name</span> <span class="o">=</span> <span class="s">'lee'</span>
+<span class="n">bind_ip</span> <span class="o">=</span> <span class="s">'0.0.0.0'</span>
+
+
+<span class="k">class</span> <span class="nc">ChallengeException</span> <span class="p">(</span><span class="nb">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">LoginException</span> <span class="p">(</span><span class="nb">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">tt</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">2</span>
+    <span class="n">input_str</span><span class="o">=</span><span class="s">""</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">input_kb</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">input_kb</span><span class="o">==</span><span class="s">""</span><span class="p">:</span>    <span class="c1">#continue
+</span>                <span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"=====================END======================="</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"Close in 5 seconds"</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_str</span><span class="o">=</span><span class="n">input_kb</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input_str</span><span class="o">=</span><span class="n">input_kb</span>
+
+<span class="k">def</span> <span class="nf">bind_nic</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">fcntl</span>
+        <span class="k">def</span> <span class="nf">get_ip_address</span><span class="p">(</span><span class="n">ifname</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">socket</span><span class="o">.</span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">fcntl</span><span class="o">.</span><span class="n">ioctl</span><span class="p">(</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span>
+                <span class="mh">0x8915</span><span class="p">,</span>  <span class="c1"># SIOCGIFADDR
+</span>                <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">'256s'</span><span class="p">,</span> <span class="n">ifname</span><span class="p">[:</span><span class="mi">15</span><span class="p">])</span>
+            <span class="p">)[</span><span class="mi">20</span><span class="p">:</span><span class="mi">24</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">get_ip_address</span><span class="p">(</span><span class="n">nic_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'[WARNING] ERROR: Indicate nic feature need to be run under Unix based system.'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s">'0.0.0.0'</span>
+    <span class="k">except</span> <span class="nb">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[WARNING] ERROR: "</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="s">'0.0.0.0'</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">'0.0.0.0'</span>
+
+<span class="k">if</span> <span class="n">nic_name</span> <span class="o">!=</span> <span class="s">''</span><span class="p">:</span>
+    <span class="n">bind_ip</span> <span class="o">=</span> <span class="n">bind_nic</span><span class="p">()</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+    <span class="c1"># s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+</span>    <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">((</span><span class="n">bind_ip</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"[FAIL] ERROR:Open socket failed{}"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"====================FAIL======================"</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"Close in 5 seconds"</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+    <span class="nb">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">IS_TEST</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="c1"># specified fields based on version
+</span><span class="n">CONF</span> <span class="o">=</span> <span class="s">"./drcom.conf"</span>
+<span class="n">UNLIMITED_RETRY</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">EXCEPTION</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="c1">#log saves to file
+</span><span class="n">LOG_PATH</span> <span class="o">=</span> <span class="s">'./drcom_client.log'</span>
+
+
+
+<span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">DEBUG</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="s">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">LOG_PATH</span><span class="p">,</span><span class="s">'a'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">challenge</span><span class="p">(</span><span class="n">svr</span><span class="p">,</span><span class="n">ran</span><span class="p">):</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">"&lt;H"</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">ran</span><span class="p">)</span><span class="o">%</span><span class="p">(</span><span class="mh">0xFFFF</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="s">"</span><span class="se">\x01\x02</span><span class="s">"</span><span class="o">+</span><span class="n">t</span><span class="o">+</span><span class="s">"</span><span class="se">\x09</span><span class="s">"</span><span class="o">+</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="o">*</span><span class="mi">15</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[challenge] recv'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[challenge] timeout, retrying...'</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"[FAIL] Connect timeout"</span><span class="p">)</span>
+            <span class="nb">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">address</span> <span class="o">==</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">continue</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[DEBUG] challenge:</span><span class="se">\n</span><span class="s">'</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">'</span><span class="se">\x02</span><span class="s">'</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ChallengeException</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[challenge] challenge packet sent.'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">md5sum</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">md5</span><span class="p">()</span>
+    <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="s">'</span><span class="si">%</span><span class="s">x'</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">'0'</span> <span class="o">+</span> <span class="n">s</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">ror</span><span class="p">(</span><span class="n">md5</span><span class="p">,</span> <span class="n">pwd</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="s">''</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">)):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">md5</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">^</span> <span class="nb">ord</span><span class="p">(</span><span class="n">pwd</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">ret</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(((</span><span class="n">x</span><span class="o">&lt;&lt;</span><span class="mi">3</span><span class="p">)</span><span class="o">&amp;</span><span class="mh">0xFF</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="o">&gt;&gt;</span><span class="mi">5</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+<span class="k">def</span> <span class="nf">keep_alive_package_builder</span><span class="p">(</span><span class="n">number</span><span class="p">,</span><span class="n">random</span><span class="p">,</span><span class="n">tail</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">first</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span><span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="n">number</span><span class="p">)</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x28\x00\x0b</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">first</span> <span class="p">:</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x0f\x27</span><span class="s">'</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="n">KEEP_ALIVE_VERSION</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x2f\x12</span><span class="s">'</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">6</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">tail</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>
+    <span class="c1">#data += struct.pack("!H",0xdc02)
+</span>    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">foo</span> <span class="o">=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">host_ip</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span> <span class="c1"># host_ip
+</span>        <span class="c1">#CRC
+</span>        <span class="c1"># edited on 2014/5/12, filled zeros to checksum
+</span>        <span class="c1"># crc = packet_CRC(data+foo)
+</span>        <span class="n">crc</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">4</span>
+        <span class="c1">#data += struct.pack("!I",crc) + foo + '\x00' * 8
+</span>        <span class="n">data</span> <span class="o">+=</span> <span class="n">crc</span> <span class="o">+</span> <span class="n">foo</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">8</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1">#packet type = 1
+</span>        <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">16</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+<span class="c1"># def packet_CRC(s):
+#     ret = 0
+#     for i in re.findall('..', s):
+#         ret ^= struct.unpack('&gt;h', i)[0]
+#         ret &amp;= 0xFFFF
+#     ret = ret * 0x2c7
+#     return ret
+</span>
+<span class="k">def</span> <span class="nf">keep_alive2</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="c1">#first keep_alive:
+</span>    <span class="c1">#number = number (mod 7)
+</span>    <span class="c1">#status = 1: first packet user sended
+</span>    <span class="c1">#         2: first packet user recieved
+</span>    <span class="c1">#         3: 2nd packet user sended
+</span>    <span class="c1">#         4: 2nd packet user recieved
+</span>    <span class="c1">#   Codes for test
+</span>    <span class="n">my_t</span> <span class="o">=</span> <span class="n">tt</span><span class="p">()</span>
+    <span class="n">my_t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="s">''</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="s">''</span>
+    <span class="n">svr</span> <span class="o">=</span> <span class="n">server</span>
+    <span class="n">ran</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mh">0xFFFF</span><span class="p">)</span>
+    <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># 2014/10/15 add by latyas, maybe svr sends back a file packet
+</span>    <span class="n">svr_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span><span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] send1'</span><span class="p">,</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv1'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">'</span><span class="se">\x07\x00\x28\x00</span><span class="s">'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">'</span><span class="se">\x07</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="n">svr_num</span><span class="p">)</span>  <span class="o">+</span> <span class="s">'</span><span class="se">\x28\x00</span><span class="s">'</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x10</span><span class="s">'</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv file, resending..'</span><span class="p">)</span>
+            <span class="n">svr_num</span> <span class="o">=</span> <span class="n">svr_num</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span><span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv1/unexpected'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="c1">#log('[keep-alive2] recv1',data.encode('hex'))
+</span>
+    <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span> <span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] send2'</span><span class="p">,</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span><span class="p">:</span>
+            <span class="n">svr_num</span> <span class="o">=</span> <span class="n">svr_num</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv2/unexpected'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv2'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+
+
+    <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">svr_num</span><span class="p">,</span><span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="n">tail</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] send3'</span><span class="p">,</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span><span class="p">:</span>
+            <span class="n">svr_num</span> <span class="o">=</span> <span class="n">svr_num</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv3/unexpected'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive2] recv3'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">"[keep-alive2] keep-alive2 loop was in daemon."</span><span class="p">)</span>
+
+
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">html</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"http://www.baidu.com"</span><span class="p">,</span><span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[SUCCESS] Connected to the Internet in wall successfully."</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[FAIL] Connect failed."</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ERROR</span><span class="p">(</span><span class="s">"Connect failed"</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">html</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">"http://www.google.com"</span><span class="p">,</span><span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[SUCCESS] Connected to the worldwide Internet successfully."</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[WARNING] Network bridge is not connected. Try to get ss from loopy.tech."</span><span class="p">)</span>
+
+
+    <span class="k">print</span><span class="p">(</span><span class="s">"[RUNNING] click enter or close this window to quit"</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">svr_num</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="n">tail</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 4\n',packet.encode('hex'))
+</span>            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] send'</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] recv'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 4 return\n',data.encode('hex'))
+</span>
+            <span class="n">ran</span> <span class="o">+=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">packet</span> <span class="o">=</span> <span class="n">keep_alive_package_builder</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">dump</span><span class="p">(</span><span class="n">ran</span><span class="p">),</span><span class="n">tail</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 5\n',packet.encode('hex'))
+</span>            <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] send'</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive2] recv'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="n">tail</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+            <span class="c1">#log('DEBUG: keep_alive2,packet 5 return\n',data.encode('hex'))
+</span>            <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0xFF</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+            <span class="n">keep_alive1</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">my_t</span><span class="o">.</span><span class="n">input_str</span><span class="o">==</span><span class="s">"c"</span><span class="p">:</span>
+                <span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+
+        <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">"[WARNING] "</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">pass</span>
+
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="k">def</span> <span class="nf">checksum</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="mi">1234</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">'....'</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">^=</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1968</span> <span class="o">*</span> <span class="n">ret</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span>
+    <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">'&lt;I'</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">mkpkt</span><span class="p">(</span><span class="n">salt</span><span class="p">,</span> <span class="n">usr</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">mac</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s">'</span><span class="se">\x03\x01\x00</span><span class="s">'</span><span class="o">+</span><span class="nb">chr</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">usr</span><span class="p">)</span><span class="o">+</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">md5sum</span><span class="p">(</span><span class="s">'</span><span class="se">\x03\x01</span><span class="s">'</span><span class="o">+</span><span class="n">salt</span><span class="o">+</span><span class="n">pwd</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">usr</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">CONTROLCHECKSTATUS</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">ADAPTERNUM</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">dump</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">),</span><span class="mi">16</span><span class="p">)</span><span class="o">^</span><span class="n">mac</span><span class="p">)</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">)</span> <span class="c1">#mac xor md51
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">md5sum</span><span class="p">(</span><span class="s">"</span><span class="se">\x01</span><span class="s">"</span> <span class="o">+</span> <span class="n">pwd</span> <span class="o">+</span> <span class="n">salt</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span> <span class="c1">#md52
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x01</span><span class="s">'</span> <span class="c1"># number of ip
+</span>    <span class="c1">#data += '\x0a\x1e\x16\x11' #your ip address1, 10.30.22.17
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">host_ip</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span> <span class="c1">#x.x.x.x -&gt;
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span> <span class="c1">#your ipaddress 2
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span> <span class="c1">#your ipaddress 3
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span> <span class="c1">#your ipaddress 4
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">md5sum</span><span class="p">(</span><span class="n">data</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x14\x00\x07\x0b</span><span class="s">'</span><span class="p">)[:</span><span class="mi">8</span><span class="p">]</span> <span class="c1">#md53
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">IPDOG</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="o">*</span><span class="mi">4</span> <span class="c1">#delimeter
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">host_name</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">PRIMARY_DNS</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span> <span class="c1">#primary dns
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">''</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dhcp_server</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'.'</span><span class="p">)])</span> <span class="c1">#DHCP server
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00\x00\x00\x00</span><span class="s">'</span> <span class="c1">#secondary dns:0.0.0.0
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">8</span> <span class="c1">#delimeter
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x94\x00\x00\x00</span><span class="s">'</span> <span class="c1"># unknow
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x06\x00\x00\x00</span><span class="s">'</span> <span class="c1"># os major
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x02\x00\x00\x00</span><span class="s">'</span> <span class="c1"># os minor
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\xf0\x23\x00\x00</span><span class="s">'</span> <span class="c1"># OS build
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x02\x00\x00\x00</span><span class="s">'</span> <span class="c1">#os unknown
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x44\x72\x43\x4f\x4d\x00\xcf\x07\x68</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">55</span><span class="c1">#unknown string
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x33\x64\x63\x37\x39\x66\x35\x32\x31\x32\x65\x38\x31\x37\x30\x61\x63\x66\x61\x39\x65\x63\x39\x35\x66\x31\x64\x37\x34\x39\x31\x36\x35\x34\x32\x62\x65\x37\x62\x31</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">24</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">AUTH_VERSION</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">))</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">ror</span><span class="p">(</span><span class="n">md5sum</span><span class="p">(</span><span class="s">'</span><span class="se">\x03\x01</span><span class="s">'</span><span class="o">+</span><span class="n">salt</span><span class="o">+</span><span class="n">pwd</span><span class="p">),</span> <span class="n">pwd</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x02\x0c</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">checksum</span><span class="p">(</span><span class="n">data</span><span class="o">+</span><span class="s">'</span><span class="se">\x01\x26\x07\x11\x00\x00</span><span class="s">'</span><span class="o">+</span><span class="n">dump</span><span class="p">(</span><span class="n">mac</span><span class="p">))</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00\x00</span><span class="s">'</span> <span class="c1">#delimeter
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="n">dump</span><span class="p">(</span><span class="n">mac</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pwd</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span><span class="c1">#strange。。。
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x60\xa2</span><span class="s">'</span> <span class="c1">#unknown, filled numbers randomly =w=
+</span>    <span class="n">data</span> <span class="o">+=</span> <span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">*</span> <span class="mi">28</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[mkpkt]'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+<span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">usr</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">svr</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">random</span>
+    <span class="k">global</span> <span class="n">SALT</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">salt</span> <span class="o">=</span> <span class="n">challenge</span><span class="p">(</span><span class="n">svr</span><span class="p">,</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">+</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mh">0xF</span><span class="p">,</span><span class="mh">0xFF</span><span class="p">))</span>
+        <span class="n">SALT</span> <span class="o">=</span> <span class="n">salt</span>
+        <span class="n">packet</span> <span class="o">=</span> <span class="n">mkpkt</span><span class="p">(</span><span class="n">salt</span><span class="p">,</span> <span class="n">usr</span><span class="p">,</span> <span class="n">pwd</span><span class="p">,</span> <span class="n">mac</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[login] send'</span><span class="p">,</span><span class="n">packet</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[login] recv'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+        <span class="n">log</span><span class="p">(</span><span class="s">'[login] packet sent.'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">address</span> <span class="o">==</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x04</span><span class="s">'</span><span class="p">:</span>
+                <span class="n">log</span><span class="p">(</span><span class="s">'[login] loged in'</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"[SUCCESS] Loged in with "</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">usr</span><span class="p">))</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">"[FAIL] ERROR: Try to login with {} failed"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">usr</span><span class="p">))</span>
+                <span class="nb">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">log</span><span class="p">(</span><span class="s">'[login] login failed.'</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">IS_TEST</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+                <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">UNLIMITED_RETRY</span> <span class="o">==</span> <span class="bp">False</span> <span class="p">:</span>
+                <span class="n">log</span><span class="p">(</span><span class="s">'[login] exception occured.'</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="nb">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+    <span class="n">log</span><span class="p">(</span><span class="s">'[login] login sent'</span><span class="p">)</span>
+    <span class="c1">#0.8 changed:
+</span>    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">23</span><span class="p">:</span><span class="mi">39</span><span class="p">]</span>
+    <span class="c1">#return data[-22:-6]
+</span>
+<span class="k">def</span> <span class="nf">keep_alive1</span><span class="p">(</span><span class="n">salt</span><span class="p">,</span><span class="n">tail</span><span class="p">,</span><span class="n">pwd</span><span class="p">,</span><span class="n">svr</span><span class="p">):</span>
+    <span class="n">foo</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">'!H'</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span><span class="o">%</span><span class="mh">0xFFFF</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s">'</span><span class="se">\xff</span><span class="s">'</span> <span class="o">+</span> <span class="n">md5sum</span><span class="p">(</span><span class="s">'</span><span class="se">\x03\x01</span><span class="s">'</span><span class="o">+</span><span class="n">salt</span><span class="o">+</span><span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00\x00\x00</span><span class="s">'</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">tail</span>
+    <span class="n">data</span> <span class="o">+=</span> <span class="n">foo</span> <span class="o">+</span> <span class="s">'</span><span class="se">\x00\x00\x00\x00</span><span class="s">'</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep_alive1] send'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+
+    <span class="n">s</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">svr</span><span class="p">,</span> <span class="mi">61440</span><span class="p">))</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'</span><span class="se">\x07</span><span class="s">'</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive1]recv/not expected'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'[keep-alive1] recv'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">empty_socket_buffer</span><span class="p">():</span>
+<span class="c1">#empty buffer for some fucking schools
+</span>    <span class="n">log</span><span class="p">(</span><span class="s">'starting to empty socket buffer'</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">address</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">recvfrom</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">(</span><span class="s">'recived sth unexpected'</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s">''</span><span class="p">:</span>
+                <span class="k">break</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="c1"># get exception means it has done.
+</span>        <span class="n">log</span><span class="p">(</span><span class="s">'exception in empty_socket_buffer'</span><span class="p">)</span>
+        <span class="k">pass</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">'emptyed'</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">daemon</span><span class="p">():</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">'/var/run/jludrcom.pid'</span><span class="p">,</span><span class="s">'w'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">IS_TEST</span><span class="p">:</span>
+        <span class="n">daemon</span><span class="p">()</span>
+        <span class="nb">execfile</span><span class="p">(</span><span class="n">CONF</span><span class="p">,</span> <span class="nb">globals</span><span class="p">())</span>
+    <span class="n">log</span><span class="p">(</span><span class="s">"auth svr:"</span><span class="o">+</span><span class="n">server</span><span class="o">+</span><span class="s">"</span><span class="se">\n</span><span class="s">username:"</span><span class="o">+</span><span class="n">username</span><span class="o">+</span><span class="s">"</span><span class="se">\n</span><span class="s">password:"</span><span class="o">+</span><span class="n">password</span><span class="o">+</span><span class="s">"</span><span class="se">\n</span><span class="s">mac:"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">mac</span><span class="p">)))</span>
+    <span class="n">log</span><span class="p">(</span><span class="n">bind_ip</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">package_tail</span> <span class="o">=</span> <span class="n">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">LoginException</span><span class="p">:</span>
+        <span class="k">continue</span>
+      <span class="n">log</span><span class="p">(</span><span class="s">'package_tail'</span><span class="p">,</span><span class="n">package_tail</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'hex'</span><span class="p">))</span>
+      <span class="c1">#keep_alive1 is fucking bullshit!
+</span>      <span class="n">empty_socket_buffer</span><span class="p">()</span>
+      <span class="n">keep_alive1</span><span class="p">(</span><span class="n">SALT</span><span class="p">,</span><span class="n">package_tail</span><span class="p">,</span><span class="n">password</span><span class="p">,</span><span class="n">server</span><span class="p">)</span>
+      <span class="n">keep_alive2</span><span class="p">(</span><span class="n">SALT</span><span class="p">,</span><span class="n">package_tail</span><span class="p">,</span><span class="n">password</span><span class="p">,</span><span class="n">server</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">()</span>
+    <span class="k">except</span> <span class="nb">Exception</span><span class="p">,</span><span class="n">err</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"[FAIL] ERROR："</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"====================FAIL======================"</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Close in 5 seconds"</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div></div>
+:ET

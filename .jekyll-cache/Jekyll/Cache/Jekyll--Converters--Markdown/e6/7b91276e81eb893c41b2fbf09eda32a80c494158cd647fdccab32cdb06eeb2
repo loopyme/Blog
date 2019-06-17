@@ -1,0 +1,162 @@
+I"�I<h3 id="1-按列处理">1. 按列处理&amp;</h3>
+
+<p>这是我顺着直觉写出来的代码,果然又长又臭,建议不要看</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+      <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">numRows</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">numRows</span> <span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+          <span class="k">return</span> <span class="n">s</span>
+        <span class="n">s</span> <span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)):</span>
+          <span class="n">location</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">counter</span>
+          <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="n">counter</span><span class="o">+=</span><span class="mi">1</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">counter</span><span class="o">-=</span><span class="mi">1</span>
+          <span class="k">if</span> <span class="n">counter</span><span class="o">&gt;=</span><span class="n">numRows</span><span class="p">:</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">numRows</span><span class="o">-</span><span class="mi">2</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="bp">False</span>
+          <span class="k">elif</span> <span class="n">counter</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">counter</span><span class="o">=</span><span class="mi">1</span>
+            <span class="n">flag</span> <span class="o">=</span><span class="bp">True</span>
+
+        <span class="n">area</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numRows</span><span class="p">)]</span>
+        <span class="nb">str</span><span class="o">=</span><span class="s">""</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)):</span>
+          <span class="n">area</span><span class="p">[</span><span class="n">location</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numRows</span><span class="p">):</span>
+          <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">area</span><span class="p">[</span><span class="n">i</span><span class="p">])):</span>
+            <span class="nb">str</span><span class="o">+=</span><span class="n">area</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">str</span>
+</code></pre></div></div>
+<blockquote>
+  <p>执行用时: 196 ms, 在ZigZag Conversion的Python3提交中击败了16.91% 的用户</p>
+
+  <p>内存消耗: 13.2 MB, 在ZigZag Conversion的Python3提交中击败了8.23% 的用户</p>
+</blockquote>
+
+<hr />
+<h3 id="2优化方法1">2.优化方法1</h3>
+
+<p>我一贯的作风,把标准答案上的c++代码,重写了一边,其实就是对方法1的优化</p>
+
+<ul>
+  <li>去除构建loction列表的中间环节,找到位置以后直接连接到对应行</li>
+  <li>把存储行内容的列表改为字符串,就可减少最后的列表字符连接环节</li>
+</ul>
+
+<p>我写完决定再也不在脑子不清醒的时候刷LeetCode了,前面是写的啥玩意儿,完全是<strong>弟弟行为</strong>.</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+  <span class="nl">public:</span>
+      <span class="n">string</span> <span class="n">convert</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numRows</span><span class="p">)</span> <span class="p">{</span>
+
+          <span class="k">if</span> <span class="p">(</span><span class="n">numRows</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+
+          <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">rows</span><span class="p">(</span><span class="n">min</span><span class="p">(</span><span class="n">numRows</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">())));</span>
+          <span class="kt">int</span> <span class="n">curRow</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+          <span class="kt">bool</span> <span class="n">goingDown</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+          <span class="k">for</span> <span class="p">(</span><span class="kt">char</span> <span class="n">c</span> <span class="o">:</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+              <span class="n">rows</span><span class="p">[</span><span class="n">curRow</span><span class="p">]</span> <span class="o">+=</span> <span class="n">c</span><span class="p">;</span>
+              <span class="k">if</span> <span class="p">(</span><span class="n">curRow</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">curRow</span> <span class="o">==</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="n">goingDown</span> <span class="o">=</span> <span class="o">!</span><span class="n">goingDown</span><span class="p">;</span>
+              <span class="n">curRow</span> <span class="o">+=</span> <span class="n">goingDown</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+          <span class="p">}</span>
+
+          <span class="n">string</span> <span class="n">ret</span><span class="p">;</span>
+          <span class="k">for</span> <span class="p">(</span><span class="n">string</span> <span class="n">row</span> <span class="o">:</span> <span class="n">rows</span><span class="p">)</span> <span class="n">ret</span> <span class="o">+=</span> <span class="n">row</span><span class="p">;</span>
+          <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+      <span class="p">}</span>
+  <span class="p">};</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+      <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">numRows</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">numRows</span> <span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="n">s</span>
+
+        <span class="n">cur_row</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">going_down</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="s">""</span><span class="p">]</span><span class="o">*</span><span class="nb">min</span><span class="p">(</span><span class="n">numRows</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+          <span class="n">rows</span><span class="p">[</span><span class="n">cur_row</span><span class="p">]</span><span class="o">+=</span><span class="n">i</span>
+          <span class="k">if</span> <span class="n">cur_row</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">cur_row</span> <span class="o">==</span> <span class="n">numRows</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">going_down</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+          <span class="n">cur_row</span> <span class="o">+=</span><span class="n">going_down</span>
+
+        <span class="n">result</span> <span class="o">=</span><span class="s">""</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+          <span class="n">result</span><span class="o">+=</span><span class="n">i</span>
+        <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+<blockquote>
+  <p>执行用时: 128 ms, 在ZigZag Conversion的Python3提交中击败了60.64% 的用户</p>
+
+  <p>内存消耗: 13.1 MB, 在ZigZag Conversion的Python3提交中击败了8.23% 的用户</p>
+</blockquote>
+
+<hr />
+<h3 id="3-按行处理">3. 按行处理</h3>
+
+<p>通过找结果中每行的字符在原字符串中的索引,可以找到通项公式,然后就能很方便的按行处理了</p>
+
+<p>优势在于可以不用使用额外的列表来存储数据了</p>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<p>令n=numRows-1, m为(0,n)的一个整数,开始分析通项公式:</p>
+<ul>
+  <li>第0行: $2 \times i \times n $</li>
+  <li>第m行: $\left\lfloor\frac {i+1}2 \right\rfloor \times 2 \times n + (-1)^{i+1} \times m$</li>
+  <li>第n行: $2 \times i \times n + n$</li>
+</ul>
+
+<p>(ps: 可能会无法加载上面的公式,试了<a href="https://stackoverflow.com/questions/26275645/how-to-support-latex-in-github-pages">stackoverflow</a>上所有方法,浏览器还是加载不了MathJax.js,望大神赐教)</p>
+
+<p>最多显示成这样:(连在一起的地方就是差个加号….)</p>
+<ul>
+  <li>第0行: <img src="https://www.zhihu.com/equation?tex=2 \times i \times n" /></li>
+  <li>第m行: <img src="https://www.zhihu.com/equation?tex=\left\lfloor\frac {i+1}2 \right\rfloor \times 2 \times n + (-1)^{i+1} \times m" /></li>
+  <li>第n行: <img src="https://www.zhihu.com/equation?tex=2 \times i \times n + n" /></li>
+</ul>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- 第0行: <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"https://www.zhihu.com/equation?tex=2 \times i \times n"</span> <span class="nt">/&gt;</span>
+- 第m行: <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"https://www.zhihu.com/equation?tex=\left\lfloor\frac {i+1}2 \right\rfloor \times 2 \times n + (-1)^{i+1} \times m"</span> <span class="nt">/&gt;</span>
+- 第n行: <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"https://www.zhihu.com/equation?tex=2 \times i \times n + n"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+<p>这可真是个小机灵鬼想出来的办法</p>
+
+<p>代码结果仍然不理想,虽然不用使用额外的列表,但在生成结果字符串时,还是占用了比较大的空间</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">numRows</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">numRows</span> <span class="o">==</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">numRows</span> <span class="o">&gt;</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">):</span> <span class="k">return</span> <span class="n">s</span>
+
+      <span class="n">result</span> <span class="o">=</span> <span class="s">""</span>
+      <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="c1"># row0
+</span>      <span class="n">n</span> <span class="o">=</span> <span class="n">numRows</span><span class="o">-</span><span class="mi">1</span>
+      <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">n</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">+=</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+      <span class="c1"># rowM
+</span>      <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">m</span><span class="p">:</span>
+          <span class="n">result</span><span class="o">+=</span><span class="n">s</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">i</span> <span class="p">)</span><span class="o">*</span><span class="n">m</span><span class="p">]</span>
+          <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+      <span class="c1"># rowN
+</span>      <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">+=</span><span class="n">s</span><span class="p">[(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+      <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+<blockquote>
+  <p>执行用时: 172 ms, 在ZigZag Conversion的Python3提交中击败了24.85% 的用户</p>
+
+  <p>内存消耗: 13.2 MB, 在ZigZag Conversion的Python3提交中击败了8.23% 的用户</p>
+</blockquote>
+:ET

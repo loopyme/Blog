@@ -1,0 +1,601 @@
+I"/�<p>我觉得照最长公共子序列是个比较经典,基础的动态规划算法,所以我专门把我的理解和方法记录下来,以后在来看看自己的思维有什么变化.</p>
+
+<h2 id="1-问题的抽象">1. 问题的抽象</h2>
+
+<p>类似于问题重述,首先先把问题抽象一下.</p>
+
+<p>算法目标相当于是要寻找两个字符串中最长的相同字串,并且字串是可以跳选的,什么意思呢,就是假设有两个字串:</p>
+
+<p>“今天会下雨” 和 “天要下大雨” 那么取出第一个字串的1,3,4和第二个字串的0,2,4都是”天下雨”,即满足条件.</p>
+
+<p>那么用两个字串张成一个二维区域,很容易就能找到在二维区域中问题的抽象</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 这堆代码是用来画图的,可以不用看
+</span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="n">s1</span><span class="p">,</span><span class="n">s2</span> <span class="o">=</span> <span class="s">"今天会下大雨"</span> <span class="p">,</span> <span class="s">"天大有可能要下大雨"</span>
+<span class="n">index</span><span class="p">,</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)):</span>
+    <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="s">"-"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)):</span>
+    <span class="n">index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="s">"-"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+
+<span class="n">matrix</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+<span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="s">"?"</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">setcolor</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="p">[[</span><span class="s">'background-color: white'</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">s1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="n">s2</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">color</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="s">'background-color: yellow'</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">color</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+<span class="n">matrix</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">setcolor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</code></pre></div></div>
+
+<style type="text/css">
+    #T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col2 {
+            background-color:  yellow;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col5 {
+            background-color:  yellow;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col4 {
+            background-color:  yellow;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col5 {
+            background-color:  yellow;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col6 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col0 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col1 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col2 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col3 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col4 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col5 {
+            background-color:  white;
+        }    #T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col6 {
+            background-color:  yellow;
+        }</style>
+
+<table id="T_51fb780a_3911_11e9_8335_54e1ad0743be">
+<thead>    <tr>
+        <th class="blank level0"></th>
+        <th class="col_heading level0 col0">0</th>
+        <th class="col_heading level0 col1">今-0</th>
+        <th class="col_heading level0 col2">天-1</th>
+        <th class="col_heading level0 col3">会-2</th>
+        <th class="col_heading level0 col4">下-3</th>
+        <th class="col_heading level0 col5">大-4</th>
+        <th class="col_heading level0 col6">雨-5</th>
+    </tr></thead>
+<tbody>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row0" class="row_heading level0 row0">0</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col0" class="data row0 col0">?</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col1" class="data row0 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col2" class="data row0 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col3" class="data row0 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col4" class="data row0 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col5" class="data row0 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow0_col6" class="data row0 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row1" class="row_heading level0 row1">天-0</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col0" class="data row1 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col1" class="data row1 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col2" class="data row1 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col3" class="data row1 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col4" class="data row1 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col5" class="data row1 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow1_col6" class="data row1 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row2" class="row_heading level0 row2">大-1</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col0" class="data row2 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col1" class="data row2 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col2" class="data row2 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col3" class="data row2 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col4" class="data row2 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col5" class="data row2 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow2_col6" class="data row2 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row3" class="row_heading level0 row3">有-2</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col0" class="data row3 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col1" class="data row3 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col2" class="data row3 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col3" class="data row3 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col4" class="data row3 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col5" class="data row3 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow3_col6" class="data row3 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row4" class="row_heading level0 row4">可-3</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col0" class="data row4 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col1" class="data row4 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col2" class="data row4 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col3" class="data row4 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col4" class="data row4 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col5" class="data row4 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow4_col6" class="data row4 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row5" class="row_heading level0 row5">能-4</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col0" class="data row5 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col1" class="data row5 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col2" class="data row5 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col3" class="data row5 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col4" class="data row5 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col5" class="data row5 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow5_col6" class="data row5 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row6" class="row_heading level0 row6">要-5</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col0" class="data row6 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col1" class="data row6 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col2" class="data row6 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col3" class="data row6 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col4" class="data row6 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col5" class="data row6 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow6_col6" class="data row6 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row7" class="row_heading level0 row7">下-6</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col0" class="data row7 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col1" class="data row7 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col2" class="data row7 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col3" class="data row7 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col4" class="data row7 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col5" class="data row7 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow7_col6" class="data row7 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row8" class="row_heading level0 row8">大-7</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col0" class="data row8 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col1" class="data row8 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col2" class="data row8 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col3" class="data row8 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col4" class="data row8 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col5" class="data row8 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow8_col6" class="data row8 col6">0</td>
+    </tr>    <tr>
+        <th id="T_51fb780a_3911_11e9_8335_54e1ad0743belevel0_row9" class="row_heading level0 row9">雨-8</th>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col0" class="data row9 col0">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col1" class="data row9 col1">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col2" class="data row9 col2">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col3" class="data row9 col3">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col4" class="data row9 col4">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col5" class="data row9 col5">0</td>
+        <td id="T_51fb780a_3911_11e9_8335_54e1ad0743berow9_col6" class="data row9 col6">0</td>
+    </tr></tbody>
+</table>
+
+<h3 id="问题就被抽象为了">问题就被抽象为了:</h3>
+
+<ul>
+  <li>
+    <p><strong>约束规则</strong>: 一个二维指针*,从(0,0)出发,需要到达(雨-4,雨-4),但它在白色区域中只能向右或者向下移动而不能向上或向左.另外,在右下侧为黄色方格时,它也能往右下移动
+ (*:<em>可以把它把简单理解为一个点,稍后我会解释为什么我叫它二维指针</em>)</p>
+  </li>
+  <li>
+    <p><strong>目标</strong>:在二维指针行进过程中,经过尽量多的黄色方格</p>
+  </li>
+</ul>
+
+<h3 id="为什么我要这么抽象">为什么我要这么抽象?</h3>
+<ul>
+  <li>二维指针其实就是在两个字符串上的指针对,由于公共子序列读出的顺序是不能够打乱的,指针在字符串上移动时就只能朝一个方向</li>
+  <li>二维指针在白色方格上行进时,就是在跳过原字符串上对子序列没有贡献的字符;而在经过黄色方格时,两个维度上读到的字符是一样的,就能放进子序列中</li>
+</ul>
+
+<h1 id="2问题的解决">2.问题的解决</h1>
+
+<p>抽象为二维行进以后,问题就比较容易解答了.我们在每一个方格(二维位置)中存放一个数字,这个数字代表着二维指针行进到这个位置能经过的最多黄格数量</p>
+
+<p>也就是说:</p>
+
+<ul>
+  <li><strong>对白格位置,数字等于它的左侧或它的上侧方块中较大的一个</strong>.这是因为因为经过白格无法增加数字.</li>
+  <li><strong>对黄格位置,数字等于它的左上侧方格数字加1</strong>,这是由于如要经过黄格,二维指针只能从黄格的左上方格向右下跳,并且能够增加数字</li>
+</ul>
+
+<p>也就变成了:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 这堆代码是用来画图的,可以不用看
+</span><span class="n">matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+
+<span class="c1">#遍历所有方格
+</span><span class="k">for</span> <span class="n">p1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">s1</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="o">==</span> <span class="n">s2</span><span class="p">[</span><span class="n">p2</span><span class="p">]:</span> <span class="c1">#是黄格
+</span>            <span class="n">matrix</span><span class="p">[</span><span class="n">p2</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">p1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">p2</span><span class="p">][</span><span class="n">p1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1">#是白格
+</span>            <span class="n">matrix</span><span class="p">[</span><span class="n">p2</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">p1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="n">p2</span><span class="p">][</span><span class="n">p1</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">matrix</span><span class="p">[</span><span class="n">p2</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">p1</span><span class="p">])</span>
+
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+<span class="n">matrix</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">setcolor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</code></pre></div></div>
+
+<style type="text/css">
+    #T_895a837c_3911_11e9_8335_54e1ad0743berow0_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow0_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow0_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow0_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow0_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow0_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow0_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow1_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow1_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow1_col2 {
+            background-color:  yellow;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow1_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow1_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow1_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow1_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow2_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow2_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow2_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow2_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow2_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow2_col5 {
+            background-color:  yellow;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow2_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow3_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow3_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow3_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow3_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow3_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow3_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow3_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow4_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow4_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow4_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow4_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow4_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow4_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow4_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow5_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow5_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow5_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow5_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow5_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow5_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow5_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow6_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow6_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow6_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow6_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow6_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow6_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow6_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow7_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow7_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow7_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow7_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow7_col4 {
+            background-color:  yellow;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow7_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow7_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow8_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow8_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow8_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow8_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow8_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow8_col5 {
+            background-color:  yellow;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow8_col6 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow9_col0 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow9_col1 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow9_col2 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow9_col3 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow9_col4 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow9_col5 {
+            background-color:  white;
+        }    #T_895a837c_3911_11e9_8335_54e1ad0743berow9_col6 {
+            background-color:  yellow;
+        }</style>
+
+<table id="T_895a837c_3911_11e9_8335_54e1ad0743be">
+<thead>    <tr>
+        <th class="blank level0"></th>
+        <th class="col_heading level0 col0">0</th>
+        <th class="col_heading level0 col1">今-0</th>
+        <th class="col_heading level0 col2">天-1</th>
+        <th class="col_heading level0 col3">会-2</th>
+        <th class="col_heading level0 col4">下-3</th>
+        <th class="col_heading level0 col5">大-4</th>
+        <th class="col_heading level0 col6">雨-5</th>
+    </tr></thead>
+<tbody>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row0" class="row_heading level0 row0">0</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow0_col0" class="data row0 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow0_col1" class="data row0 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow0_col2" class="data row0 col2">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow0_col3" class="data row0 col3">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow0_col4" class="data row0 col4">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow0_col5" class="data row0 col5">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow0_col6" class="data row0 col6">0</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row1" class="row_heading level0 row1">天-0</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow1_col0" class="data row1 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow1_col1" class="data row1 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow1_col2" class="data row1 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow1_col3" class="data row1 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow1_col4" class="data row1 col4">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow1_col5" class="data row1 col5">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow1_col6" class="data row1 col6">1</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row2" class="row_heading level0 row2">大-1</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow2_col0" class="data row2 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow2_col1" class="data row2 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow2_col2" class="data row2 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow2_col3" class="data row2 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow2_col4" class="data row2 col4">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow2_col5" class="data row2 col5">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow2_col6" class="data row2 col6">2</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row3" class="row_heading level0 row3">有-2</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow3_col0" class="data row3 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow3_col1" class="data row3 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow3_col2" class="data row3 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow3_col3" class="data row3 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow3_col4" class="data row3 col4">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow3_col5" class="data row3 col5">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow3_col6" class="data row3 col6">2</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row4" class="row_heading level0 row4">可-3</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow4_col0" class="data row4 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow4_col1" class="data row4 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow4_col2" class="data row4 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow4_col3" class="data row4 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow4_col4" class="data row4 col4">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow4_col5" class="data row4 col5">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow4_col6" class="data row4 col6">2</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row5" class="row_heading level0 row5">能-4</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow5_col0" class="data row5 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow5_col1" class="data row5 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow5_col2" class="data row5 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow5_col3" class="data row5 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow5_col4" class="data row5 col4">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow5_col5" class="data row5 col5">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow5_col6" class="data row5 col6">2</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row6" class="row_heading level0 row6">要-5</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow6_col0" class="data row6 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow6_col1" class="data row6 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow6_col2" class="data row6 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow6_col3" class="data row6 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow6_col4" class="data row6 col4">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow6_col5" class="data row6 col5">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow6_col6" class="data row6 col6">2</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row7" class="row_heading level0 row7">下-6</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow7_col0" class="data row7 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow7_col1" class="data row7 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow7_col2" class="data row7 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow7_col3" class="data row7 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow7_col4" class="data row7 col4">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow7_col5" class="data row7 col5">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow7_col6" class="data row7 col6">2</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row8" class="row_heading level0 row8">大-7</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow8_col0" class="data row8 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow8_col1" class="data row8 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow8_col2" class="data row8 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow8_col3" class="data row8 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow8_col4" class="data row8 col4">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow8_col5" class="data row8 col5">3</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow8_col6" class="data row8 col6">3</td>
+    </tr>    <tr>
+        <th id="T_895a837c_3911_11e9_8335_54e1ad0743belevel0_row9" class="row_heading level0 row9">雨-8</th>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow9_col0" class="data row9 col0">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow9_col1" class="data row9 col1">0</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow9_col2" class="data row9 col2">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow9_col3" class="data row9 col3">1</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow9_col4" class="data row9 col4">2</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow9_col5" class="data row9 col5">3</td>
+        <td id="T_895a837c_3911_11e9_8335_54e1ad0743berow9_col6" class="data row9 col6">4</td>
+    </tr></tbody>
+</table>
+
+<p>于是就找到了最大公共子序列长度(最右下角那个方格):4</p>
+
+<p>然后画出二维指针行进的路线,经过的黄格就是最大公共子序列里的字符</p>
+
+<h4 id="这时候已经大致理解了这个问题就可以去看严谨描述了比如这个">这时候已经大致理解了这个问题,就可以去看严谨描述了,比如<a href="https://blog.csdn.net/v_JULY_v/article/details/6110269">这个</a></h4>
+
+<p>示例:这是一个用来寻找最长公共子序列的函数,输入两个字符串,返回最长公共子序列长度</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">find_lcseque</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">):</span>
+  <span class="n">matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>  <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+  <span class="k">for</span> <span class="n">p1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)):</span>
+      <span class="k">if</span> <span class="n">s1</span><span class="p">[</span><span class="n">p1</span><span class="p">]</span> <span class="o">==</span> <span class="n">s2</span><span class="p">[</span><span class="n">p2</span><span class="p">]:</span>
+        <span class="n">matrix</span><span class="p">[</span><span class="n">p1</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">p2</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">p1</span><span class="p">][</span><span class="n">p2</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">matrix</span><span class="p">[</span><span class="n">p1</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">p2</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="n">p1</span><span class="p">][</span><span class="n">p2</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">matrix</span><span class="p">[</span><span class="n">p1</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">p2</span><span class="p">])</span>
+  <span class="k">return</span> <span class="n">matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">s1</span><span class="p">,</span><span class="n">s2</span><span class="o">=</span><span class="s">"sertyulilvtyesryiunivtcrxuey5rcbuidewioufhweilufcjlewcfjweuidfio328r8347wedjesilkdfj32o8reuwelijdel"</span><span class="p">,</span><span class="s">"ewuirwleucfhlwiedfhwlieufchswfuchswefuihwlifuhwdficjewfuijfhu;iwejf;erfjweiufuhrewyp87rfhy;sdiufewu89p"</span>
+<span class="n">find_lcseque</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>40
+</code></pre></div></div>
+:ET

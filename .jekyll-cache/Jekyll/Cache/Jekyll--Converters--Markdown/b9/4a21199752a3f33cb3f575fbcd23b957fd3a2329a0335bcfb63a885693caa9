@@ -1,0 +1,50 @@
+I"�<blockquote>
+  <p>食用地址: http://face.loopy.tech</p>
+</blockquote>
+
+<p>实现路径是:</p>
+<ul>
+  <li><strong>使用flask_uploads来上传图片</strong>
+    <ul>
+      <li><strong>设置上传图片存储位置</strong>:config[‘UPLOADED_PHOTOS_DEST’]</li>
+      <li><strong>文件类型过滤</strong>:创建一个set（UploadSet()类），然后使用configure_uploads()方法注册并完成相应的配置</li>
+      <li><strong>限制文件大小</strong>:导入patch_request_class()函数，传入应用实例和大小</li>
+      <li><strong>对文件重命名</strong></li>
+    </ul>
+  </li>
+  <li><strong>使用BaiduAPI来处理人脸</strong>
+    <ul>
+      <li><strong>实例化预设工具类</strong></li>
+      <li><strong>获得APIToken</strong></li>
+      <li><strong>检查是否为人脸库里的脸</strong>:自定义same_face函数
+        <ul>
+          <li>图片转为base64格式:调用base64包</li>
+          <li>调用BaiduAPI进行人脸识别: 构造请求头,然后使用flask-request</li>
+        </ul>
+      </li>
+      <li><strong>图片转为base64格式</strong>:调用base64包</li>
+      <li><strong>调用BaiduAPI进行人脸处理</strong>: 构造请求头,然后使用requests</li>
+      <li><strong>处理返回数据</strong>: 用预设字典对返回数据进行翻译</li>
+      <li><strong>画脸部轮廓图</strong>:使用PIL库画点,然后保存到临时文件夹</li>
+      <li><strong>将结果呈现到网页中</strong>:render_template调用预设html模板</li>
+    </ul>
+  </li>
+</ul>
+
+<p>TODO:</p>
+<ol>
+  <li>几个功能模块是用以前的代码拼凑的,导致引用的包混乱</li>
+  <li>将BaiduAPI换为本地实现(虽能实现,但搁置:节省服务器资源)</li>
+</ol>
+
+<p>代码可见:<a href="https://github.com/loopyme/online-tools/tree/master/face">Github仓库</a></p>
+
+<p>参考资料:</p>
+<ol>
+  <li>https://zhuanlan.zhihu.com/p/41059137</li>
+  <li>https://zhuanlan.zhihu.com/p/24418074</li>
+  <li>https://blog.csdn.net/GeekLeee/article/details/52505605</li>
+  <li>https://stackoverflow.com/questions/31884903/flask-uploads-always-throwing-uploadnotallowed-error-even-with-no-constraints</li>
+  <li>http://ai.baidu.com/docs</li>
+</ol>
+:ET

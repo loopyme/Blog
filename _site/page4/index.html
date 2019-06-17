@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="No fun, go die.">
+    <meta name="keywords"  content="LoopyTech, Blog">
+    <meta name="theme-color" content="#000000">
+    
+    <title>学习日志</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.png">
+
+    <!-- Safari Webpage Icon    by-BY -->
+    <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/page4/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Pygments Github CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">LoopyTech</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Page Header -->
+<header class="intro-header" style="background-image: url('/img/home-bg.jpg')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
+                <div class="site-heading">
+                    <h1>LoopyTech</h1>
+                    <!--<hr class="small">-->
+                    <span class="subheading"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="container">
+	<div class="row">
+        
+
+<!-- USE SIDEBAR -->
+    <!-- PostList Container -->
+    		<div class="
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                postlist-container
+            ">
+    			
+<div class="post-preview">
+    <a href="/2019/03/07/leet123/">
+        <h2 class="post-title">
+            买卖股票的最佳时机
+        </h2>
+        
+        <h3 class="post-subtitle">
+            121&122&123_maxProfit
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  给定一个数组，它的第 i 个元素是一支给定股票第 i 天的价格。
+
+  题目:
+  
+    121.如果你最多只允许完成一笔交易（即买入和卖出一支股票），设计一个算法来计算你所能获取的最大利润。
+    122.设计一个算法来计算你所能获取的最大利润。你可以尽可能地完成更多的交易（多次买卖一支股票）。
+    123.设计一个算法来计算你所能获取的最大利润。你最多可以完成 两笔 交易...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on March 7, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/07/MaxComputeDML/">
+        <h2 class="post-title">
+            MaxCompute-DML
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（4）
+        </h3>
+        
+        <div class="post-content-preview">
+            A. 查询 SELECT
+
+select [all|distinct] select_expr,select_expr,...
+  from table_reference
+  [where wher_condition]
+  [group by col_list]
+  [order by order_condition]
+  [distribute by distribute_condit...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on March 7, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/03/leet095/">
+        <h2 class="post-title">
+            不同的二叉搜索树
+        </h2>
+        
+        <h3 class="post-subtitle">
+            095_generate_BST & 096_count_BST
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  95.给定一个整数 n，生成所有由 1 … n 为节点所组成的二叉搜索树。
+
+  96.给定一个整数 n，求以 1 … n 为节点组成的二叉搜索树有多少种？
+
+  
+    示例:
+
+    输入: 3
+
+    95.输出:
+[
+ [1,null,3,2],
+ [3,2,null,1],
+ [3,1,null,null,2],
+ [2,1,3],
+ [1,null,2,null,3]...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on March 3, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/02/ssr/">
+        <h2 class="post-title">
+            SSR的重新配置
+        </h2>
+        
+        <h3 class="post-subtitle">
+            记一次SSR崩了以后的重装
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  由于我的带宽配置有一定的溢出(俗称网速用不完),要PY交易或者需要帮忙的右上角About里有我的邮件地址 :wink:
+
+
+今天一大早就传来噩耗,我的SSR崩了….
+
+自从我把ubuntu14.04-teddysun的脚本换成了centos6换成了centos6.5mini-doub版本了以后,这个脚本稳定工作了一年半,然而今早我的Google Assistant没有响起来…
+
+起初以...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on March 2, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/02/face/">
+        <h2 class="post-title">
+            人脸识别
+        </h2>
+        
+        <h3 class="post-subtitle">
+            整理归档的时候发现另一个好玩的
+        </h3>
+        
+        <div class="post-content-preview">
+            A. 项目信息
+
+该项目为2018年秋季数据科学课程的final project,也可以点击此处查看 @B@L@O@C@K@E@D@ 这门课程的其他作业。
+
+主要目的是识别重庆大学计算机学院老师的面部特征。
+B. 技术步骤
+
+在本项目中，你会看到：
+
+  使用爬虫获取老师的详细信息及照片
+  使用预训练的FaceNet-MTCNN模型来对图像进行人脸检测和对齐
+  将预训练的FaceNet模...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on March 2, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/03/02/drcom/">
+        <h2 class="post-title">
+            Drcom懒人版-Windows
+        </h2>
+        
+        <h3 class="post-subtitle">
+            整理归档的时候发现一个好玩的
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  代码来自https://github.com/drcoms/drcom-generic，我稍微改了点，方便懒人在Win-PC上面直接跑
+
+
+Drcom正版是一个刚需软件,但它默认不能开热点,就很难受.
+
+于是就有大佬抓包分析写出了Drcom破解版,破解版基本能够替代正版的功能,无论是登录,心跳包都能构造出来,使用起来很快乐.但是GitHub上的代码转化为能用的程序之间,有一定的工作量,...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on March 2, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/02/28/MaxComputeDDL/">
+        <h2 class="post-title">
+            MaxCompute-DDL
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（3）
+        </h3>
+        
+        <div class="post-content-preview">
+            A. 建表
+
+create table [if not exists] table_name
+  [(col_name data_type [comment col_comment],...)]
+  [comment table_comment]
+  [partitioned by (col_name data_type [comment col_comment],...)]
+  [life...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on February 28, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/02/27/leet006/">
+        <h2 class="post-title">
+            Z字形变换
+        </h2>
+        
+        <h3 class="post-subtitle">
+            006_ZigZag_Conversion
+        </h3>
+        
+        <div class="post-content-preview">
+            1. 按列处理&amp;
+
+这是我顺着直觉写出来的代码,果然又长又臭,建议不要看
+
+  class Solution:
+      def convert(self, s: str, numRows: int) -&gt; str:
+        if numRows ==1:
+          return s
+        s =list(s)[::-1]
+        coun...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on February 27, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/02/25/leet005/">
+        <h2 class="post-title">
+            最长回文子串
+        </h2>
+        
+        <h3 class="post-subtitle">
+            005_find_longest_palindrome
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  给定一个字符串 s，找到 s 中最长的回文子串。你可以假设 s 的最大长度为 1000。
+
+
+
+  示例 1：
+
+
+
+  
+    输入: “babad”
+
+    输出: “bab”
+
+    注意: “aba” 也是一个有效答案。
+  
+
+
+1.反序最长公共字串&amp;
+
+最长公共子串是我们一个比较熟悉的问题,所以我想尽量往上靠
+
+很明显,回文串正读反读都是一样的,所以(是回文串...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on February 25, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/02/25/lcs/">
+        <h2 class="post-title">
+            最长公共子序列的动态规划算法分析
+        </h2>
+        
+        <h3 class="post-subtitle">
+            我的理解和分析
+        </h3>
+        
+        <div class="post-content-preview">
+            我觉得照最长公共子序列是个比较经典,基础的动态规划算法,所以我专门把我的理解和方法记录下来,以后在来看看自己的思维有什么变化.
+
+1. 问题的抽象
+
+类似于问题重述,首先先把问题抽象一下.
+
+算法目标相当于是要寻找两个字符串中最长的相同字串,并且字串是可以跳选的,什么意思呢,就是假设有两个字串:
+
+“今天会下雨” 和 “天要下大雨” 那么取出第一个字串的1,3,4和第二个字串的0,2,4都是...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on February 25, 2019
+    </p>
+</div>
+<hr>
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+    <li class="previous">
+        <a href="/page3">&larr; Newer Posts</a>
+    </li>
+    
+    
+    <li class="next">
+        <a href="/page5">Older Posts &rarr;</a>
+    </li>
+    
+</ul>
+
+
+    		</div>
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-3 col-lg-offset-0
+                col-md-3 col-md-offset-0
+                col-sm-12
+                col-xs-12
+                sidebar-container
+            ">
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#ACA-BigData" title="ACA-BigData" rel="13">
+                                    ACA-BigData
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#LeetCode" title="LeetCode" rel="8">
+                                    LeetCode
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#List" title="List" rel="3">
+                                    List
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#Str" title="Str" rel="4">
+                                    Str
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Algorithm" title="Algorithm" rel="8">
+                                    Algorithm
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Fun" title="Fun" rel="10">
+                                    Fun
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#AI" title="AI" rel="7">
+                                    AI
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#install" title="install" rel="3">
+                                    install
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#ubuntu" title="ubuntu" rel="3">
+                                    ubuntu
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#Tutorial" title="Tutorial" rel="4">
+                                    Tutorial
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Short About -->
+                <section class="visible-md visible-lg">
+                    <hr><h5><a href="/about/">ABOUT ME</a></h5>
+                    <div class="short-about">
+                        
+                            <a href="/about">
+                                <img src="http://file.loopy.tech/share/logo.jpg"/>
+                            </a>
+                        
+                        
+                            <p>No fun, go die.</p>
+                        
+                        <!-- SNS Link -->
+                        <ul class="list-inline">
+                            
+                            <li>
+                                <a href="/feed.xml">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            <!-- add jianshu add target = "_blank" to <a> by BY -->
+                            
+                            
+                            
+                            
+                            
+                            
+                            <li>
+                                <a target="_blank" href="https://github.com/loopyme">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            
+                        </ul>
+                        
+                            <p>✉️ peter@mail.loopy.tech</p>
+                        
+                    </div>
+                </section>
+                <!-- Friends Blog -->
+                
+    		</div>
+        
+	</div>
+</div>
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <!-- add jianshu add target = "_blank" to <a> by BY -->
+                    
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+
+
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/loopyme">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; LoopyTech 2019
+                    <br>
+                    Theme on <a href="https://github.com/loopyme/loopy.github.io.git">GitHub</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=loopyme&repo=loopyme.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script type="text/javascript">
+    if(navigator.serviceWorker){
+        // For security reasons, a service worker can only control the pages that are in the same directory level or below it. That's why we put sw.js at ROOT level.
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {console.log('Service Worker Registered. ', registration)})
+            .catch((error) => {console.log('ServiceWorker registration failed: ', error)})
+    }
+</script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/ 
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers   
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-131324966-3';
+    var _gaDomain = 'auto';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/apple-touch-icon.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

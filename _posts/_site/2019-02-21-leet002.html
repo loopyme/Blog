@@ -1,0 +1,136 @@
+<blockquote>
+  <p>给出两个 非空 的链表用来表示两个非负的整数。其中，它们各自的位数是按照 逆序 的方式存储的，并且它们的每个节点只能存储 一位 数字。</p>
+
+  <p>如果，我们将这两个数相加起来，则会返回一个新的链表来表示它们的和。</p>
+
+  <p>您可以假设除了数字 0 之外，这两个数都不会以 0 开头。</p>
+
+  <p>示例：</p>
+
+  <blockquote>
+    <p>输入：(2 -&gt; 4 -&gt; 3) + (5 -&gt; 6 -&gt; 4)</p>
+
+    <p>输出：7 -&gt; 0 -&gt; 8</p>
+
+    <p>原因：342 + 465 = 807</p>
+  </blockquote>
+</blockquote>
+
+<p>这道题就是用定义的单链表类来做个简单的计算,没啥很精妙的思路</p>
+
+<h3 id="1模拟竖式加法">1.模拟竖式加法&amp;~</h3>
+<p>最暴力,加数全往carry里塞,用p做结果指针</p>
+
+<p><strong>hist:</strong></p>
+<ul>
+  <li>最初写的时候是先加一个空节点,算完再往里放数据,这会导致链表后面多空一个节点.</li>
+</ul>
+
+<p>去最后一个空节点挺麻烦,所以把第0个节点留空,也就是先计算,再加节点</p>
+
+<ul>
+  <li>增加了一个 先判断是否有一个链表是空的</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">addTwoNumbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l1</span><span class="p">:</span> <span class="s">'ListNode'</span><span class="p">,</span> <span class="n">l2</span><span class="p">:</span> <span class="s">'ListNode'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s">'ListNode'</span><span class="p">:</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">l1</span> <span class="p">:</span> <span class="k">return</span> <span class="n">l2</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">l2</span> <span class="p">:</span> <span class="k">return</span> <span class="n">l1</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="n">p</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+      <span class="n">carry</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">while</span> <span class="n">l1</span> <span class="ow">or</span> <span class="n">l2</span> <span class="ow">or</span> <span class="n">carry</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">l1</span><span class="p">:</span>
+          <span class="n">carry</span> <span class="o">+=</span> <span class="n">l1</span><span class="o">.</span><span class="n">val</span>
+          <span class="n">l1</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="nb">next</span>
+        <span class="k">if</span> <span class="n">l2</span><span class="p">:</span>
+          <span class="n">carry</span> <span class="o">+=</span><span class="n">l2</span><span class="o">.</span><span class="n">val</span>
+          <span class="n">l2</span> <span class="o">=</span> <span class="n">l2</span><span class="o">.</span><span class="nb">next</span>
+        <span class="n">p</span><span class="o">.</span><span class="nb">next</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">carry</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="nb">next</span>
+        <span class="n">carry</span> <span class="o">//=</span><span class="mi">10</span>
+      <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="nb">next</span>
+</code></pre></div></div>
+<blockquote>
+  <table>
+    <tbody>
+      <tr>
+        <td>136ms 6.7MB</td>
+        <td>74.95% 89.22%</td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote>
+
+<hr />
+<h3 id="2蟒蛇语偷懒法">2.蟒蛇语偷懒法</h3>
+<p>大力法,变整数,加完再变回链表(蠢)</p>
+
+<p>(这里还有一种做法是用字符串来拼接)</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">addTwoNumbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l1</span><span class="p">:</span> <span class="s">'ListNode'</span><span class="p">,</span> <span class="n">l2</span><span class="p">:</span> <span class="s">'ListNode'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s">'ListNode'</span><span class="p">:</span>
+      <span class="n">num1</span><span class="p">,</span><span class="n">num2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span><span class="mi">0</span>
+      <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">while</span> <span class="n">l1</span><span class="p">:</span>
+        <span class="n">num1</span> <span class="o">+=</span> <span class="n">l1</span><span class="o">.</span><span class="n">val</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">count</span><span class="p">)</span>
+        <span class="n">l1</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="nb">next</span>
+        <span class="n">count</span><span class="o">+=</span><span class="mi">1</span>
+      <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">while</span> <span class="n">l2</span><span class="p">:</span>
+        <span class="n">num2</span> <span class="o">+=</span> <span class="n">l2</span><span class="o">.</span><span class="n">val</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">count</span><span class="p">)</span>
+        <span class="n">l2</span> <span class="o">=</span> <span class="n">l2</span><span class="o">.</span><span class="nb">next</span>
+        <span class="n">count</span><span class="o">+=</span><span class="mi">1</span>
+      <span class="n">add_num</span> <span class="o">=</span> <span class="n">num1</span><span class="o">+</span><span class="n">num2</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="n">p</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">add_num</span><span class="p">))):</span>
+        <span class="n">p</span><span class="o">.</span><span class="nb">next</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">add_num</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="nb">next</span>
+        <span class="n">add_num</span> <span class="o">=</span> <span class="n">add_num</span><span class="o">//</span><span class="mi">10</span>
+      <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="nb">next</span>
+</code></pre></div></div>
+<blockquote>
+  <p>216ms 6.7MB | 7.81% 89.22%
+<em>这里发生了一个奇怪的事情,多次提交时间变化很大,132~216ms都有</em></p>
+</blockquote>
+
+<hr />
+<h3 id="3炫酷递归">3.炫酷递归</h3>
+<p>搜到了一个递归的算法,是C++写的,我用python重写了,但感觉只是在秀操作(我感觉基础问题递归很多时候都不太友好,只有在二叉树之类的地方有较大用处)</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">ListNode</span><span class="o">*</span> <span class="n">addTwoNumbers</span><span class="p">(</span><span class="n">ListNode</span><span class="o">*</span> <span class="n">l1</span><span class="p">,</span> <span class="n">ListNode</span><span class="o">*</span> <span class="n">l2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">l1</span><span class="p">)</span> <span class="k">return</span> <span class="n">l2</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">l2</span><span class="p">)</span> <span class="k">return</span> <span class="n">l1</span><span class="p">;</span>
+        <span class="kt">int</span> <span class="n">target</span> <span class="o">=</span> <span class="n">l1</span><span class="o">-&gt;</span><span class="n">val</span> <span class="o">+</span> <span class="n">l2</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span>
+        <span class="n">ListNode</span><span class="o">*</span> <span class="n">res</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">target</span> <span class="o">%</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="n">res</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">addTwoNumbers</span><span class="p">(</span><span class="n">l1</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">,</span> <span class="n">l2</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">res</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">addTwoNumbers</span><span class="p">(</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">,</span> <span class="k">new</span> <span class="n">ListNode</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+        <span class="k">delete</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">addTwoNumbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l1</span><span class="p">:</span> <span class="s">'ListNode'</span><span class="p">,</span> <span class="n">l2</span><span class="p">:</span> <span class="s">'ListNode'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s">'ListNode'</span><span class="p">:</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">l1</span> <span class="p">:</span> <span class="k">return</span> <span class="n">l2</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">l2</span> <span class="p">:</span> <span class="k">return</span> <span class="n">l1</span>
+      <span class="n">target</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span><span class="n">l2</span><span class="o">.</span><span class="n">val</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="n">ListNode</span><span class="p">(</span><span class="n">target</span><span class="o">%</span><span class="mi">10</span><span class="p">)</span>
+      <span class="n">result</span><span class="o">.</span><span class="nb">next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addTwoNumbers</span><span class="p">(</span><span class="n">l1</span><span class="o">.</span><span class="nb">next</span><span class="p">,</span><span class="n">l2</span><span class="o">.</span><span class="nb">next</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">target</span> <span class="o">&gt;=</span><span class="mi">10</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="nb">next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addTwoNumbers</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="nb">next</span><span class="p">,</span><span class="n">ListNode</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+      <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+<blockquote>
+  <table>
+    <tbody>
+      <tr>
+        <td>172ms 6.7MB</td>
+        <td>39.89% 62.98%</td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote>

@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="No fun, go die.">
+    <meta name="keywords"  content="LoopyTech, Blog">
+    <meta name="theme-color" content="#000000">
+    
+    <title>买卖股票的最佳时机 - 学习日志</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.png">
+
+    <!-- Safari Webpage Icon    by-BY -->
+    <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2019/03/07/leet123/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Pygments Github CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">LoopyTech</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/post-bg-2015.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/post-bg-2015.jpg')
+    }
+
+    
+</style>
+<header class="intro-header" >
+    <div class="header-mask"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/#LeetCode" title="LeetCode">LeetCode</a>
+                        
+                        <a class="tag" href="/tags/#List" title="List">List</a>
+                        
+                    </div>
+                    <h1>买卖股票的最佳时机</h1>
+                    
+                    
+                    <h2 class="subheading">121&122&123_maxProfit</h2>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+          <script language="javascript" type="text/javascript" src="https://cdn.staticfile.org/jquery/1.7.2/jquery.min.js"></script>
+
+          <script type="text/javascript">
+/* 鼠标特效 */
+var a_idx = 0;
+jQuery(document).ready(function($) {
+    $("body").click(function(e) {
+        var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正" ,"法治", "爱国", "敬业", "诚信", "友善");
+        var $i = $("<span />").text(a[a_idx]);
+        a_idx = (a_idx + 1) % a.length;
+        var x = e.pageX,
+        y = e.pageY;
+        $i.css({
+            "z-index": 999999999999999999999999999999999999999999999999999999999999999999999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": "#FF2B4B"
+        });
+        $("body").append($i);
+        $i.animate({
+            "top": y - 180,
+            "opacity": 0
+        },
+        1500,
+        function() {
+            $i.remove();
+        });
+    });
+});
+</script>
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+        <blockquote>
+  <p>给定一个数组，它的第 i 个元素是一支给定股票第 i 天的价格。</p>
+
+  <p>题目:</p>
+  <ul>
+    <li>121.如果你最多只允许完成一笔交易（即买入和卖出一支股票），设计一个算法来计算你所能获取的最大利润。</li>
+    <li>122.设计一个算法来计算你所能获取的最大利润。你可以尽可能地完成更多的交易（多次买卖一支股票）。</li>
+    <li>123.设计一个算法来计算你所能获取的最大利润。你最多可以完成 两笔 交易。</li>
+  </ul>
+
+  <p>注意:</p>
+  <ul>
+    <li>你不能在买入股票前卖出股票。</li>
+    <li>你不能同时参与多笔交易（你必须在再次购买前出售掉之前的股票）</li>
+  </ul>
+
+  <p>示例:</p>
+
+  <blockquote>
+    <p>输入: [7,1,5,3,6,4]</p>
+
+    <ul>
+      <li>121输出:5</li>
+      <li>123输出:7</li>
+      <li>124输出:7</li>
+    </ul>
+  </blockquote>
+</blockquote>
+
+<p>第二次抽奖又抽到了组合题,还是三合一的</p>
+
+<p>按顺序一道一道来吧</p>
+
+<h3 id="1-暴力121">1. 暴力(<em>121</em>)</h3>
+
+<p>要是暴力法,只要求O(n^2)的时间复杂度的话,写起来就很简单</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">maxProfit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+      <span class="c1"># if all(x&gt;y for x, y in zip(prices, prices[1:])):return 0
+</span>      <span class="n">max_profit</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)):</span>
+          <span class="n">max_profit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">max_profit</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">max_profit</span>
+</code></pre></div></div>
+<blockquote>
+  <p>超出时间限制</p>
+</blockquote>
+
+<hr />
+<h3 id="2-在循环中把历史最小值作为买入值121">2. 在循环中把历史最小值作为买入值(<em>121</em>)</h3>
+
+<p>这样就能线性复杂度了</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">maxProfit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">prices</span> <span class="o">==</span><span class="p">[]:</span> <span class="k">return</span> <span class="mi">0</span>
+      <span class="n">max_profit</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="n">hist_min_price</span> <span class="o">=</span> <span class="n">prices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)):</span>
+        <span class="n">max_profit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">hist_min_price</span><span class="p">,</span><span class="n">max_profit</span><span class="p">)</span>
+        <span class="n">hist_min_price</span> <span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">hist_min_price</span><span class="p">,</span><span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+      <span class="k">return</span> <span class="n">max_profit</span>
+</code></pre></div></div>
+<blockquote>
+  <p>执行用时: 112 ms, 在Best Time to Buy and Sell Stock的Python3提交中击败了6.28% 的用户</p>
+
+  <p>内存消耗: 14.1 MB, 在Best Time to Buy and Sell Stock的Python3提交中击败了2.03% 的用户</p>
+
+  <p>ps:我已经不相信这个鬼评分系统了</p>
+</blockquote>
+
+<hr />
+<h3 id="3-总是在极小值买入下一个极大值卖出122">3. 总是在极小值买入,下一个极大值卖出(<em>122</em>)</h3>
+
+<p>由于不限制买卖次数,很明显总是在极小值买入,下一个极大值卖出是获利最多的策略</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">maxProfit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span> <span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">increase</span> <span class="o">=</span> <span class="n">prices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">prices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">buy_price</span> <span class="o">=</span> <span class="n">prices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_profit</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+          <span class="k">if</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">increase</span><span class="p">:</span> <span class="c1"># 持续增
+</span>            <span class="k">continue</span>
+          <span class="k">elif</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">increase</span><span class="p">:</span> <span class="c1"># 持续减
+</span>            <span class="k">continue</span>
+          <span class="k">elif</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">increase</span><span class="p">:</span> <span class="c1"># 极小值
+</span>            <span class="n">increase</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">buy_price</span> <span class="o">=</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+          <span class="k">elif</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">increase</span><span class="p">:</span> <span class="c1"># 极大值
+</span>            <span class="n">increase</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">max_profit</span> <span class="o">+=</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">buy_price</span>
+
+        <span class="k">if</span> <span class="n">increase</span><span class="p">:</span>
+          <span class="n">max_profit</span> <span class="o">+=</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">buy_price</span>
+        <span class="k">return</span> <span class="n">max_profit</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>执行用时: 68 ms, 在Best Time to Buy and Sell Stock II的Python3提交中击败了24.19% 的用户</p>
+
+  <p>内存消耗: 14 MB, 在Best Time to Buy and Sell Stock II的Python3提交中击败了0.95% 的用户</p>
+</blockquote>
+
+<hr />
+<h3 id="4-贪心算法122">4. 贪心算法(<em>122</em>)</h3>
+
+<p>只要能赚,就完成买卖.有点傻瓜版量化交易的感觉</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">maxProfit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span> <span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+        <span class="n">max_profit</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+          <span class="k">if</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">max_profit</span><span class="o">+=</span><span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">prices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">max_profit</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>执行用时: 100 ms, 在Best Time to Buy and Sell Stock II的Python3提交中击败了1.46% 的用户</p>
+
+  <p>内存消耗: 14.1 MB, 在Best Time to Buy and Sell Stock II的Python3提交中击败了0.95% 的用户</p>
+</blockquote>
+
+<hr />
+<h3 id="5-叠加做空123无法实现">5. <del>叠加做空</del>(<em>123</em>)(无法实现!)</h3>
+
+<p><del>买卖两次,可以看作单笔买卖,再叠加上一次做空操作.</del></p>
+
+<p><del>首先按照第121题的思路,计算出单笔最大获利.再在一次买卖期间计算出一个最大做空获利,做空获利和单笔最大获利加起来就是两笔最大获利</del></p>
+
+<p>但是,实际上做空获利和抛售获利是相互影响的,无法先算一个,再算另一个</p>
+
+<h3 id="6-大神解法123">6. 大神解法(<em>123</em>)</h3>
+
+<p>来自<a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii/discuss/39611/Is-it-Best-Solution-with-O(n)-O(1).">这里</a></p>
+
+<p>理解起来颇有一点难度,我感觉自己是懂了,但表达不清楚…
+(建议不要看括号里的解释,容易晕:大概就是把第一次的获利表现在第二次的买价中,就能在优化第二次买卖中兼顾第一次.)</p>
+
+<p>下面这张表就是在输入为<code class="highlighter-rouge">[3,3,5,0,0,4,1,2]</code>时,每次循环结束时相关变量的值,方便理解.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i_price</th>
+      <th>buy_price1</th>
+      <th>buy_price2</th>
+      <th>profit1</th>
+      <th>profit2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>0</td>
+      <td>0</td>
+      <td>-2</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>0</td>
+      <td>0</td>
+      <td>-2</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0</td>
+      <td>-2</td>
+      <td>4</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0</td>
+      <td>-3</td>
+      <td>4</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0</td>
+      <td>-3</td>
+      <td>4</td>
+      <td>6</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+The thinking is simple and is inspired by the best solution from Single Number II (I read through the discussion after I use DP).
+Assume we only have 0 money at first;
+4 Variables to maintain some interested 'ceilings' so far:
+The maximum of if we've just buy 1st stock, if we've just sold 1nd stock, if we've just buy 2nd stock, if we've just sold 2nd stock.
+Very simple code too and work well. I have to say the logic is simple than those in Single Number II.
+*/</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Solution</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">maxProfit</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">prices</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">hold1</span> <span class="o">=</span> <span class="nc">Integer</span><span class="o">.</span><span class="na">MIN_VALUE</span><span class="o">,</span> <span class="n">hold2</span> <span class="o">=</span> <span class="nc">Integer</span><span class="o">.</span><span class="na">MIN_VALUE</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">release1</span> <span class="o">=</span> <span class="mi">0</span><span class="o">,</span> <span class="n">release2</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="nl">i:</span><span class="n">prices</span><span class="o">){</span>                              <span class="c1">// Assume we only have 0 money at first</span>
+            <span class="n">release2</span> <span class="o">=</span> <span class="nc">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">release2</span><span class="o">,</span> <span class="n">hold2</span><span class="o">+</span><span class="n">i</span><span class="o">);</span>     <span class="c1">// The maximum if we've just sold 2nd stock so far.</span>
+            <span class="n">hold2</span>    <span class="o">=</span> <span class="nc">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">hold2</span><span class="o">,</span>    <span class="n">release1</span><span class="o">-</span><span class="n">i</span><span class="o">);</span>  <span class="c1">// The maximum if we've just buy  2nd stock so far.</span>
+            <span class="n">release1</span> <span class="o">=</span> <span class="nc">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">release1</span><span class="o">,</span> <span class="n">hold1</span><span class="o">+</span><span class="n">i</span><span class="o">);</span>     <span class="c1">// The maximum if we've just sold 1nd stock so far.</span>
+            <span class="n">hold1</span>    <span class="o">=</span> <span class="nc">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">hold1</span><span class="o">,</span>    <span class="o">-</span><span class="n">i</span><span class="o">);</span>          <span class="c1">// The maximum if we've just buy  1st stock so far.</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">release2</span><span class="o">;</span> <span class="c1">///Since release1 is initiated as 0, so release2 will always higher than release1.</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">maxProfit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span> <span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+      <span class="n">buy_price1</span> <span class="o">=</span> <span class="n">buy_price2</span> <span class="o">=</span> <span class="n">prices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="n">profit1</span> <span class="o">=</span> <span class="n">profit2</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">for</span> <span class="n">i_price</span> <span class="ow">in</span> <span class="n">prices</span><span class="p">:</span>
+        <span class="n">buy_price1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">buy_price1</span> <span class="p">,</span><span class="n">i_price</span>            <span class="p">)</span>
+        <span class="n">profit1</span>    <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">profit1</span>    <span class="p">,</span><span class="n">i_price</span><span class="o">-</span><span class="n">buy_price1</span> <span class="p">)</span>
+        <span class="n">buy_price2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">buy_price2</span> <span class="p">,</span><span class="n">i_price</span> <span class="o">-</span> <span class="n">profit1</span>  <span class="p">)</span>
+        <span class="n">profit2</span>    <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">profit2</span>    <span class="p">,</span><span class="n">i_price</span><span class="o">-</span><span class="n">buy_price2</span> <span class="p">)</span>
+      <span class="k">return</span> <span class="n">profit2</span>
+</code></pre></div></div>
+<blockquote>
+  <p>执行用时 : 80 ms, 在Best Time to Buy and Sell Stock III的Python3提交中击败了69.85% 的用户</p>
+
+  <p>内存消耗 : 14 MB, 在Best Time to Buy and Sell Stock III的Python3提交中击败了0.00% 的用户</p>
+</blockquote>
+
+<h3 id="7-其他解法123">7. 其他解法(<em>123</em>)</h3>
+
+<p>我认为以下的算法没<em>6. 大神解法</em>那么优秀,所以只列出思路,不写代码</p>
+
+<ul>
+  <li>切两半法: 分别找到[:i]和[i:]两部分的最大收益,然后引出动态规划,或双向扫描等常见解法</li>
+  <li><a href="https://www.cnblogs.com/ariel-dreamland/p/9166176.html">递推法</a>: 计算局部最优,再比较从而得出全局最优</li>
+</ul>
+
+        本文总字数: 3890
+
+
+                <hr style="visibility: hidden;">
+
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2019/03/07/MaxComputeDML/" data-toggle="tooltip" data-placement="top" title="MaxCompute-DML">
+                        Previous<br>
+                        <span>MaxCompute-DML</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/03/10/omnetpp/" data-toggle="tooltip" data-placement="top" title="在Ubuntu18.04上安装OMNeT++5.4.1">
+                        Next<br>
+                        <span>在Ubuntu18.04上安装OMNeT++5.4.1</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+
+
+                <!--Gitalk评论start  -->
+                
+                <!-- 引入Gitalk评论插件  -->
+                <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+                <script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+                <div id="gitalk-container"></div>
+                <!-- 引入一个生产md5的js，用于对id值进行处理，防止其过长 -->
+                <!-- Thank DF:https://github.com/NSDingFan/NSDingFan.github.io/issues/3#issuecomment-407496538 -->
+                <script src="/js/md5.min.js"></script>
+                <script type="text/javascript">
+                    var gitalk = new Gitalk({
+                    clientID: '7808941c97a2f16167b5',
+                    clientSecret: 'e273346fc0e4d781af7c11ed694c823a03611307',
+                    repo: 'loopy.github.io',
+                    owner: 'loopyme',
+                    admin: ['loopyme'],
+                    distractionFreeMode: true,
+                    id: md5(location.pathname),
+                    });
+                    gitalk.render('gitalk-container');
+                </script>
+                
+                <!-- Gitalk end -->
+
+                
+
+            </div>
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+        				
+                            
+                				<a href="/tags/#ACA-BigData" title="ACA-BigData" rel="13">
+                                    ACA-BigData
+                                </a>
+                            
+        				
+                            
+                				<a href="/tags/#LeetCode" title="LeetCode" rel="8">
+                                    LeetCode
+                                </a>
+                            
+        				
+                            
+                				<a href="/tags/#List" title="List" rel="3">
+                                    List
+                                </a>
+                            
+        				
+                            
+        				
+                            
+                				<a href="/tags/#Str" title="Str" rel="4">
+                                    Str
+                                </a>
+                            
+        				
+                            
+                				<a href="/tags/#Algorithm" title="Algorithm" rel="8">
+                                    Algorithm
+                                </a>
+                            
+        				
+                            
+                				<a href="/tags/#Fun" title="Fun" rel="10">
+                                    Fun
+                                </a>
+                            
+        				
+                            
+        				
+                            
+                				<a href="/tags/#AI" title="AI" rel="7">
+                                    AI
+                                </a>
+                            
+        				
+                            
+                				<a href="/tags/#install" title="install" rel="3">
+                                    install
+                                </a>
+                            
+        				
+                            
+        				
+                            
+        				
+                            
+                				<a href="/tags/#ubuntu" title="ubuntu" rel="3">
+                                    ubuntu
+                                </a>
+                            
+        				
+                            
+        				
+                            
+                				<a href="/tags/#Tutorial" title="Tutorial" rel="4">
+                                    Tutorial
+                                </a>
+                            
+        				
+                            
+        				
+                            
+        				
+                            
+        				
+        			</div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        // BY Fix:去除标题前的‘#’ issues:<https://github.com/qiubaiying/qiubaiying.github.io/issues/137>
+        // anchors.options = {
+        //   visible: 'always',
+        //   placement: 'right',
+        //   icon: '#'
+        // };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <!-- add jianshu add target = "_blank" to <a> by BY -->
+                    
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+
+
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/loopyme">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; LoopyTech 2019
+                    <br>
+                    Theme on <a href="https://github.com/loopyme/loopy.github.io.git">GitHub</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=loopyme&repo=loopyme.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script type="text/javascript">
+    if(navigator.serviceWorker){
+        // For security reasons, a service worker can only control the pages that are in the same directory level or below it. That's why we put sw.js at ROOT level.
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {console.log('Service Worker Registered. ', registration)})
+            .catch((error) => {console.log('ServiceWorker registration failed: ', error)})
+    }
+</script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/ 
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers   
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-131324966-3';
+    var _gaDomain = 'auto';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog (selector) {
+        var P = $('div.post-container'),a,n,t,l,i,c;
+        a = P.find('h1,h2,h3,h4,h5,h6');
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#"+$(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="'+i+'" rel="nofollow">'+t+'</a>');
+            l = $('<li class="'+n+'_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;    
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function(e){
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/apple-touch-icon.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

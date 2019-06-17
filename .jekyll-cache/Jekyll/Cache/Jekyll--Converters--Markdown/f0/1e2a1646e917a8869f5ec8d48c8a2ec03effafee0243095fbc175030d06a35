@@ -1,0 +1,158 @@
+I"2<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ['\\(','\\)'] ],
+      processEscapes: true
+    }
+  });
+  </script>
+
+<script type="text/javascript" async="" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+<h1 id="决策树什么是基尼系数">决策树：什么是基尼系数</h1>
+<blockquote>
+  <p>在我翻译这篇<a href="www.loopy.tech/2019/05/03/rf/">Random Forests for Complete Beginners</a>的时候，对基尼系数和它相关的一些中文表达充满了疑问，查了一些资料以后，完成了这篇文章。其中基尼杂质系数的计算和解释参考了<a href="https://victorzhou.com/blog/gini-impurity/">A Simple Explanation of Gini Impurity</a>。</p>
+</blockquote>
+
+<p>如果你查看<a href="https://scikit-learn.org/">scikit-learn</a>中<a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html">DecisionTreeClassifier</a>的文档，你会看到这样的参数：
+<img src="https://img-blog.csdnimg.cn/20190504121833199.png" alt="scikit学习" />
+<a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a>文档里也谈到了gini。那么两者都提到并作为默认标准的基尼系数是什么？</p>
+<h2 id="名词辨析">名词辨析</h2>
+
+<p>你在不同的地方往往能看到关于基尼的不同名词，我查询了一大堆文献，发现它们的使用遵循以下规律：</p>
+<ul>
+  <li><strong>基尼杂质系数/基尼不纯系数</strong>(Gini Impurity):等效于我们通常说的基尼系数，在上面提到的分类器文档里的就是它，计算方法在后面将提到。</li>
+  <li><strong>基尼增益系数/基尼系数增益</strong>(Gini Gain):表征某个划分对基尼系数的增益，使用原基尼杂质系数减去按样本占比加权的各个分支的基尼杂质系数来计算，计算方法在后面将提到。</li>
+  <li><strong>基尼指数</strong>(Gini index)：这是一个尴尬的问题，因为有人把它等价于gini impurity，但也有人把它用作gini coefficient。需要结合上下文来判断。</li>
+  <li><strong>基尼系数</strong>(Gini coefficient)：表征在二分类问题中，正负两种标签的分配合理程度。当G=0，说明正负标签的预测概率均匀分配，模型相当于是随机排序。这个名词也在经济学中也有使用，本质是相同的，是用来表征一个地区财富的分配的合理程度。当G=0，说明财富均匀分配。</li>
+</ul>
+
+<h2 id="基尼杂质系数gini-impurity的理解和计算">基尼杂质系数(Gini Impurity)的理解和计算</h2>
+<p>训练决策树包括将当前数据分成两个分支。假设我们有以下数据点:
+<img src="https://img-blog.csdnimg.cn/20190504133702810.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xvb3B5Xw==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+现在，我们的分支里有5个蓝点和5个绿点。
+如果我们在x=2处进行划分:
+<img src="https://img-blog.csdnimg.cn/20190504133820295.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xvb3B5Xw==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+这很明显是个完美划分，因为它把数据集分成了两个分支：</p>
+<ul>
+  <li>左分支全是蓝点</li>
+  <li>右分支全是绿点</li>
+</ul>
+
+<p>但如果我们在x=1.5处进行划分呢?
+<img src="https://img-blog.csdnimg.cn/20190504134005605.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xvb3B5Xw==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+这个划分把数据集分成了两个分支：</p>
+<ul>
+  <li>左分支，4个蓝点</li>
+  <li>右分支，1个蓝点+5个绿点</li>
+</ul>
+
+<p>很明显，这种划分更糟糕，但我们如何量化呢?</p>
+
+<p>解决方法就是基尼杂质系数。</p>
+
+<h3 id="示例1整个数据集">示例1:整个数据集</h3>
+<p>我们来计算整个数据集的基尼杂质系数。</p>
+
+<p>如果随机选择一个数据点并随机给它分类，我们<strong>错误</strong>分类数据点的概率是多少?</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>我们的选择</th>
+      <th>实际的分类</th>
+      <th>可能性</th>
+      <th>对错</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>蓝</td>
+      <td>蓝</td>
+      <td>25%</td>
+      <td>✓</td>
+    </tr>
+    <tr>
+      <td>红</td>
+      <td>蓝</td>
+      <td>25%</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>蓝</td>
+      <td>红</td>
+      <td>25%</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>红</td>
+      <td>红</td>
+      <td>25%</td>
+      <td>✓</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>我们只在上面的两个事件中对其进行了错误的分类。因此，我们的<strong>错误</strong>概率是25% + 25% = 50%，也即基尼杂质系数是0.5.</p>
+
+<p><strong>公式</strong>
+<script type="math/tex">G = \sum_{i=1}^C {p(i)*[1-p(i)]}</script></p>
+<ul>
+  <li>C: 类别数</li>
+  <li>p(i)：一个样本被归类进第i类的概率</li>
+</ul>
+
+<p>上面这个例子<strong>计算式</strong>即为：
+<script type="math/tex">% <![CDATA[
+\begin{aligned}
+G&=p(1)*[1-p(1)]+p(2)*[1-p(2)]\\
+&=0.5*[1-0.5]+0.5*[1-0.5]\\
+&=0.5
+\end{aligned} %]]></script></p>
+
+<h3 id="示例2完美划分">示例2:完美划分</h3>
+<p>完美划分后数据集的基尼杂质系数是多少?
+<img src="https://img-blog.csdnimg.cn/2019050414043019.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xvb3B5Xw==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+左分支的基尼杂质系数：
+<script type="math/tex">G_{left}=1∗(1−1)+0∗(1−0)=0</script></p>
+
+<p>右分支的基尼杂质系数：
+<script type="math/tex">G_{right}=0∗(1−0)+1∗(1−1)=0</script></p>
+
+<p>它们没有杂质,所以基尼杂质系数自然为0！此时就是最优情况。</p>
+
+<h3 id="示例3不完美划分">示例3:不完美划分</h3>
+<p>那不完美划分呢?
+<img src="https://img-blog.csdnimg.cn/20190504140820759.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xvb3B5Xw==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+易知左分支：
+<script type="math/tex">G_{left}=0</script></p>
+
+<p>右分支：
+<script type="math/tex">% <![CDATA[
+\begin{aligned}
+G_{right}&=\frac{1}{6}*(1-\frac{1}{6})+\frac{5}{6}*(1-\frac{5}{6})\\
+&=\frac{5}{18}\\
+&=0.278
+\end{aligned} %]]></script></p>
+
+<h3 id="划分的选择">划分的选择</h3>
+<p>终于到了回答之前提出问题的时候了:我们如何量化划分的效果?</p>
+
+<p>对这个划分：
+<img src="https://img-blog.csdnimg.cn/20190504141241509.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xvb3B5Xw==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+我们已经计算了基尼系数杂质:</p>
+<ul>
+  <li>划分前(整个数据集):0.5</li>
+  <li>左分支:0</li>
+  <li>右分支:0.278
+ -
+我们将基于每个分支中的样本占比来进行加权来以确定划分的基尼增益。由于左分支有4个样本，右分支有6个样本，我们得到:
+<script type="math/tex">(0.4∗0)+(0.6∗0.278)=0.167</script></li>
+</ul>
+
+<p>因此，我们用这个划分“降低”的杂质量是
+<script type="math/tex">0.5−0.167=0.333</script></p>
+
+<p>这就被称为基尼增益系数。越好的划分基尼增益系数越大，比如此处0.5&gt;0.333.</p>
+:ET

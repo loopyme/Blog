@@ -1,0 +1,349 @@
+<blockquote>
+  <p>按照“作业截至即公开”的策略，我决定使用数据结构的弱智作业来水一篇博客，并延时到作业截至后再post上来，实际上，这是2019-03-28写的了。</p>
+</blockquote>
+
+<blockquote>
+  <p>题目；</p>
+  <ol>
+    <li>编写使用freelist 的带头、尾结点的双向链表类的定义，实现双向链表的基本操作。</li>
+    <li>利用双向链表实现2个一元稀疏多项式的加法运算，运算结果得到的链表要求按照指数升序有序，并遍历输出指数升序、指数降序的多项式。</li>
+  </ol>
+</blockquote>
+
+<h3 id="大致思路">大致思路</h3>
+
+<p>就是创造一个链表类的子类，节点数据能表示一个项的稀疏和阶数。然后画出来多项式类的协作图，差不多是这样：
+<img src="http://api.loopy.tech/api/multinomial/class_multinomial__coll__graph.png" alt="multinomial.png" /></p>
+
+<p>然后弱智的写就行了。</p>
+
+<h3 id="1-链表类">1. 链表类</h3>
+
+<p>从书上抄，再自己加个构造函数就行了。可惜我最终还是没找到针对代码的OCR，只能手打。</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">/// 双向链表的节点
+</span><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">E</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">Link</span> <span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="k">static</span> <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">freelist</span><span class="p">;</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">E</span> <span class="n">element</span><span class="p">;</span>
+    <span class="n">Link</span> <span class="o">*</span><span class="n">next</span><span class="p">;</span>
+    <span class="n">Link</span> <span class="o">*</span><span class="n">prev</span><span class="p">;</span>
+
+    <span class="k">explicit</span> <span class="nf">Link</span><span class="p">(</span><span class="k">const</span> <span class="n">E</span> <span class="o">&amp;</span><span class="n">it</span><span class="p">,</span> <span class="n">Link</span> <span class="o">*</span><span class="n">prevp</span><span class="p">,</span> <span class="n">Link</span> <span class="o">*</span><span class="n">nextp</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">it</span><span class="p">;</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="n">prevp</span><span class="p">;</span>
+        <span class="n">next</span> <span class="o">=</span> <span class="n">nextp</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">explicit</span> <span class="nf">Link</span><span class="p">(</span><span class="n">Link</span> <span class="o">*</span><span class="n">prevp</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">,</span> <span class="n">Link</span> <span class="o">*</span><span class="n">nextp</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="n">prevp</span><span class="p">;</span>
+        <span class="n">next</span> <span class="o">=</span> <span class="n">nextp</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="o">*</span><span class="k">operator</span> <span class="nf">new</span><span class="p">(</span><span class="kt">size_t</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">freelist</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="k">return</span> <span class="o">::</span><span class="k">new</span> <span class="n">Link</span><span class="p">;</span>
+        <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">temp</span> <span class="o">=</span> <span class="n">freelist</span><span class="p">;</span>
+        <span class="n">freelist</span> <span class="o">=</span> <span class="n">freelist</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">temp</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="k">operator</span> <span class="nf">delete</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">((</span><span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="p">)</span> <span class="n">ptr</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">freelist</span><span class="p">;</span>
+        <span class="n">freelist</span> <span class="o">=</span> <span class="p">(</span><span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="p">)</span> <span class="n">ptr</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">};</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">E</span><span class="o">&gt;</span>
+<span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;::</span><span class="n">freelist</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</code></pre></div></div>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">/// 双项链表
+</span><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">E</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">LinkedList</span> <span class="p">{</span>
+<span class="k">protected</span><span class="o">:</span>
+    <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">curr</span><span class="p">;</span>
+    <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">head</span><span class="p">;</span>
+    <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">tail</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">cnt</span><span class="p">;</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">LinkedList</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="n">head</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">;</span>
+        <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">tail</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">;</span>
+        <span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span> <span class="o">=</span> <span class="n">curr</span><span class="p">;</span>
+        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">insert</span><span class="p">(</span><span class="k">const</span> <span class="n">E</span> <span class="o">&amp;</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">prev</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">curr</span><span class="p">,</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+        <span class="n">cnt</span><span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">append</span><span class="p">(</span><span class="k">const</span> <span class="n">E</span> <span class="o">&amp;</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span> <span class="o">=</span> <span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">,</span> <span class="n">tail</span><span class="p">);</span>
+        <span class="n">cnt</span><span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">E</span> <span class="n">remove</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">==</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">E</span> <span class="n">it</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">;</span>
+        <span class="n">Link</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">ltemp</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+        <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">prev</span> <span class="o">=</span> <span class="n">curr</span><span class="p">;</span>
+        <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+        <span class="k">delete</span> <span class="n">ltemp</span><span class="p">;</span>
+        <span class="n">cnt</span><span class="o">--</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">it</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">prev</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">curr</span> <span class="o">!=</span> <span class="n">head</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+
+<h3 id="2-项的结构体">2. 项的结构体</h3>
+
+<p>这里有个小东西，因为助教题也不说清楚，所以只有依靠Define预留参数，到时候针对OJ再调整参数，控制编译。</p>
+
+<blockquote>
+  <p><em>上完实验课更新：</em>
+总结出了垃圾OJ必须具有的品质：</p>
+  <ol>
+    <li>登不上（用户数据库炸了</li>
+    <li>登上了没有题（题目数据库炸了</li>
+    <li>提交了全部打零分（测试用例是错的或者没有</li>
+    <li>代码全部无法保存（设计者牛逼！</li>
+    <li>不计算使用内存，时间（我怀疑根本就没有测试容器</li>
+    <li>好不容易能跑了，一共就十个测试用例，还没有特殊点的（出题者牛逼！</li>
+  </ol>
+</blockquote>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///////////////////////////// 测试用例参数(写的时候还没公布测试用例..)
+</span>
+<span class="c1">// 多项式系数&amp;阶数的数据类型
+</span><span class="cp"># define number int
+</span>
+<span class="c1">/////////////////////////////
+</span>
+<span class="c1">/// 存储每一项的系数和阶数
+</span><span class="k">struct</span> <span class="n">Term</span> <span class="p">{</span>
+    <span class="n">number</span> <span class="n">coefficient</span><span class="p">;</span>
+    <span class="n">number</span> <span class="n">order</span><span class="p">;</span>
+<span class="p">};</span>
+
+</code></pre></div></div>
+<h3 id="3-多项式类">3. 多项式类</h3>
+
+<p>别看它长，写了30min的成果，大多代码段是相似的，直接复制再改，都是树形的判断条件导致的。</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///////////////////////////// 测试用例参数(写的时候还没公布测试用例..)
+</span>
+<span class="c1">// 输入的多项式阶数是否有序
+//# define isSorted
+</span>
+<span class="c1">// 输入的多项式阶数是否按降序
+//# define isDescending
+</span>
+<span class="c1">// 系数为0或次数为0是否需要输出
+// define printzero
+/////////////////////////////
+/// 多项式类,继承自LinkedList
+</span><span class="k">class</span> <span class="nc">Multinomial</span> <span class="o">:</span> <span class="k">public</span> <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">Term</span><span class="o">&gt;</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="cm">/**
+  * @brief 多项式的构造函数,从输入流里读取
+  * @param termsCount 项的个数
+  */</span>
+    <span class="n">Multinomial</span><span class="p">(</span><span class="kt">int</span> <span class="n">termsCount</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+        <span class="n">number</span> <span class="n">coefficientBuffer</span><span class="p">,</span> <span class="n">orderBuffer</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">termsCount</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">coefficientBuffer</span> <span class="o">&gt;&gt;</span> <span class="n">orderBuffer</span><span class="p">;</span>
+            <span class="n">append</span><span class="p">(</span><span class="n">Term</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span><span class="n">coefficientBuffer</span><span class="p">,</span> <span class="n">orderBuffer</span><span class="p">});</span>
+        <span class="p">}</span>
+
+<span class="cp">#ifndef isSorted
+</span>        <span class="c1">// bubble sort to get ascending
+</span>        <span class="n">curr</span> <span class="o">=</span> <span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+        <span class="n">Link</span><span class="o">&lt;</span><span class="n">Term</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">j</span><span class="p">;</span>
+        <span class="n">Term</span> <span class="n">buffer</span><span class="p">;</span>
+
+        <span class="k">while</span> <span class="p">(</span><span class="n">curr</span> <span class="o">!=</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">j</span> <span class="o">!=</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span> <span class="o">&gt;</span> <span class="n">j</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="n">buffer</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">;</span>
+                    <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span> <span class="o">=</span> <span class="n">j</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">;</span>
+                    <span class="n">j</span><span class="o">-&gt;</span><span class="n">element</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">j</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+        <span class="p">}</span>
+<span class="cp">#endif
+</span>
+<span class="cp">#ifdef isDescending
+</span>        <span class="n">Link</span><span class="o">&lt;</span><span class="n">Term</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">buffer</span><span class="p">;</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="n">head</span><span class="p">;</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">curr</span> <span class="o">!=</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+            <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">;</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="n">head</span><span class="p">;</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="n">tail</span><span class="p">;</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">;</span>
+<span class="cp">#endif
+</span>    <span class="p">}</span>
+
+    <span class="cm">/**
+* @brief 多项式的输出
+* @param isAscending 布尔,是否升序输出
+* @todo Overload cout
+*/</span>
+    <span class="kt">void</span> <span class="n">print</span><span class="p">(</span><span class="kt">bool</span> <span class="n">isAscending</span> <span class="o">=</span> <span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+<span class="cp">#ifdef printzero
+</span>        <span class="k">if</span> <span class="p">(</span><span class="n">isAscending</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">&lt;&lt;</span> <span class="s">"x^"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">;</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">curr</span> <span class="o">==</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"+"</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+            <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">&lt;&lt;</span> <span class="s">"x^"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">;</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">curr</span> <span class="o">==</span> <span class="n">head</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"+"</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+<span class="cp">#endif
+#ifndef printzero
+</span>        <span class="kt">bool</span> <span class="n">isFirstTerm</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">isAscending</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">curr</span> <span class="o">!=</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">isFirstTerm</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">;</span>
+                        <span class="n">isFirstTerm</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"+1"</span><span class="p">;</span>
+                    <span class="p">}</span>
+
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">isFirstTerm</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">&lt;&lt;</span> <span class="s">"x^"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">;</span>
+                        <span class="n">isFirstTerm</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"+"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">&lt;&lt;</span> <span class="s">"x^"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">;</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">tail</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">curr</span> <span class="o">!=</span> <span class="n">head</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">isFirstTerm</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">;</span>
+                        <span class="n">isFirstTerm</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"+1"</span><span class="p">;</span>
+                    <span class="p">}</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">isFirstTerm</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">&lt;&lt;</span> <span class="s">"x^"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">;</span>
+                        <span class="n">isFirstTerm</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"+"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">&lt;&lt;</span> <span class="s">"x^"</span> <span class="o">&lt;&lt;</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">;</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+        <span class="p">}</span>
+<span class="cp">#endif
+</span>    <span class="p">}</span>
+<span class="cm">/**
+* @brief 多项式加法,结果直接存在it里
+* @param m 加法的加数
+* @todo Overload +
+*/</span>
+    <span class="kt">void</span> <span class="n">add</span><span class="p">(</span><span class="n">Multinomial</span> <span class="n">m</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+        <span class="n">m</span><span class="p">.</span><span class="n">curr</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+        <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">;</span>
+                <span class="n">insert</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">);</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+                <span class="n">m</span><span class="p">.</span><span class="n">curr</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span> <span class="o">==</span> <span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span> <span class="o">+=</span> <span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">coefficient</span><span class="p">;</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+                <span class="n">m</span><span class="p">.</span><span class="n">curr</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span> <span class="o">&lt;</span> <span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">.</span><span class="n">order</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">curr</span> <span class="o">==</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">while</span> <span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">curr</span> <span class="o">!=</span> <span class="n">m</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">element</span><span class="p">);</span>
+                    <span class="n">m</span><span class="p">.</span><span class="n">curr</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">curr</span> <span class="o">==</span> <span class="n">m</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span>
+
+        <span class="p">}</span>
+
+    <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<h3 id="4文档">4.文档</h3>
+<p>以前写了个shell脚本，对CPP项目Git+Doxygen一键操作，还能自动上传到html服务器，于是就有了<a href="http://api.loopy.tech/api/multinomial/index.html">这个东西</a>。</p>
+
+<p>所以这个项目的自动头部注释长这样（别去clone那个仓库…那是个私库）</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * @File    : Multinomial.h
+ * @Desc    : 链表,链表节点,多项式,项,三个类加一个结构体
+ * @Date    : 19-3-28 下午6:53
+ * @Author  : Loopy
+ * @Git     : https://github.com/loopyme/Stuffs.git
+ * @ApiDoc  : http://api.loopy.tech/api/multinomial/index.html
+ * @Contact : 57658689098a@gmail.com
+ * @Software: CLion
+ */</span>
+</code></pre></div></div>
+
+<h3 id="搞定">搞定</h3>
+<blockquote>
+  <p><em>上完实验课更新：</em></p>
+
+  <p>等到什么时候有空，我一定写一篇“如何在一下午从0开始配置好一个OJ平台”。。。</p>
+</blockquote>

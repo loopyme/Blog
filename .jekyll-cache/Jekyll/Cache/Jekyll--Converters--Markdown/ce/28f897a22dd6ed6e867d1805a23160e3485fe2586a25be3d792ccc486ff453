@@ -1,0 +1,762 @@
+I"P�<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ['\\(','\\)'] ],
+      processEscapes: true
+    }
+  });
+  </script>
+
+<script type="text/javascript" async="" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+<blockquote>
+  <p>本文内容大致翻译自<a href="https://victorzhou.com/blog/intro-to-neural-networks/">Machine Learning for Beginners: An Introduction to Neural Networks</a>，我个人修改或添加了部分内容，若感觉价值不高，请跳过或参阅原文。</p>
+</blockquote>
+
+<div style="display: none">
+&gt; 本文代码可见[Github](TODO)。
+</div>
+
+<h1 id="面向初学者的机器学习教程神经网络简介">面向初学者的机器学习教程：神经网络简介</h1>
+<p><strong>简单解释神经网络如何工作，并且从零开始使用Python实现一个神经网络。</strong></p>
+
+<p>神经网络可能并没有你想象的那么复杂。虽然“神经网络”这个词经常被用作流行语，但实际上它比人们往往想象的要简单得多。</p>
+
+<p>这篇文章是为完全初学者准备的，即使零基础的小白也是适用的。我们将了解神经网络如何工作，并且从零开始使用Python实现一个神经网络。</p>
+
+<p>一个很好玩的是：我针对这篇文章制作了一个基于Jupyter Notebook的动态教程，<a href="http://file.loopy.tech/release/IntroToNN.html">这里</a>就是playground示例。</p>
+
+<p>现在开始我们的教程！</p>
+
+<h2 id="1-制作一个神经元">1. 制作一个神经元</h2>
+
+<h3 id="11-什么是神经元">1.1 什么是神经元？</h3>
+<p>首先，我们要知道什么是神经元。它是神经网络的基本单位，用来接受输入，做一些数学运算，然后产生一个输出。这是一个2输入神经元的示意图:
+<img src="https://github.com/loopyme/loopyme.github.io/blob/master/_posts/pic/2019-05-01/1.png?raw=true" alt="neurons.png" /></p>
+
+<p>你完全可以把它想象成一个函数，在这个神经元（函数）里发生了三个运算：</p>
+<ol>
+  <li>
+    <p>每个输入分别乘以一个<strong>权重w1,w2</strong>（weight）</p>
+
+    <script type="math/tex; mode=display">x_1 → x_1 * w_1</script>
+
+    <script type="math/tex; mode=display">x_2 → x_2 * w_2</script>
+  </li>
+  <li>
+    <p>将上一步的结果加起来，再加上一个<strong>偏置b</strong>（bias）</p>
+
+    <script type="math/tex; mode=display">(x_1 × w_1)+(x_2 × w_2)+ b</script>
+  </li>
+  <li>
+    <p>把上一步的结果带入<strong>激活函数</strong>（activation function）中进行计算。于是就可以把输出表示为：</p>
+
+    <script type="math/tex; mode=display">y= f(x_1 ∗ w_1 + x_2 ∗ w_2 + b)</script>
+  </li>
+</ol>
+
+<p>看到这里，你可能有两个疑问：</p>
+<ol>
+  <li>
+    <p>激活函数f(x)是什么？</p>
+
+    <p>激活函数的作用是将无限制的输入转换为可预测形式的输出。它是一类函数的总称，其中一种很常用的激活函数是sigmoid函数，它能将变量映射到0,1之间，表达式为
+ <script type="math/tex">f(x) = \frac{1}{1+e^{-x}}</script>
+ 在坐标轴上表现是这样的 <img src="https://github.com/loopyme/loopyme.github.io/blob/master/_posts/pic/2019-05-01/2.png?raw=true" alt="sigmoid.png" /></p>
+
+    <p>sigmoid函数的输出介于0和1，我们可以理解为它把 (−∞,+∞) 范围内的数压缩到 (0, 1)以内。正值越大输出越接近1，负向数值越大输出越接近0。</p>
+  </li>
+  <li>
+    <p>神经元不就是个函数吗？</p>
+
+    <p>是的，神经元就是个函数。将上面的几步整理起来，如果你选取Sigmoid作激活函数的话，一个2输入的神经元就是：</p>
+
+    <script type="math/tex; mode=display">f(x_1,x_2) = \frac{1}{1+e^{x_1 ∗ w_1 + x_2 ∗ w_2 + b}}</script>
+  </li>
+</ol>
+
+<h3 id="12-神经元实例">1.2 神经元实例</h3>
+<p>接下来是一个简单的例子，来帮助你理解什么是神经元：</p>
+
+<p>假设我们有一个以Sigmoid作激活函数的2输入的神经元，它具有这样的参数：</p>
+
+<script type="math/tex; mode=display">w=[0,1]</script>
+
+<script type="math/tex; mode=display">b=4</script>
+
+<p>(w=[0,1]是w1=0,w2=1使用向量书写时的样子)</p>
+
+<p>那么我们就可以使用这个神经元来做计算了，比如，我们输入x = [2,3],那么计算过程就是(使用向量点乘表示)：</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+ result &= Sigmoid(x_1 ∗ w_1 + x_2 ∗ w_2 + b)\\&=\ Sigmoid([0,1]\cdot[2,3] +4)\\&=\frac{1}{1+e^7}\approx0.999
+\end{aligned} %]]></script>
+
+<p>即神经元在输入为[2,3]的时候输出为0.999。这样计算是从输入正向传递以获得输出，这在神经网络中称为正向传播过程。</p>
+
+<h3 id="13-神经元代码实现">1.3 神经元代码实现</h3>
+<p>我们这里使用了NumPy来完成一些数学计算:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+  <span class="c1"># Sigmoid激活函数：f(x) = 1 / (1 + e^(-x))
+</span>  <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">Neuron</span><span class="p">:</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">bias</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
+
+  <span class="k">def</span> <span class="nf">feedforward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="c1"># 给输入赋权，添加偏置，然后带入激活函数
+</span>    <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
+    <span class="k">return</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">total</span><span class="p">)</span>
+</code></pre></div></div>
+<p>然后运行一下测试：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="c1"># w1 = 0, w2 = 1
+</span><span class="n">bias</span> <span class="o">=</span> <span class="mi">4</span>                   <span class="c1"># b = 4
+</span><span class="n">n</span> <span class="o">=</span> <span class="n">Neuron</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">bias</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>       <span class="c1"># x1 = 2, x2 = 3
+</span><span class="k">print</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">feedforward</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>    <span class="c1"># 0.9990889488055994
+</span></code></pre></div></div>
+
+<h2 id="2-搭建神经网络">2. 搭建神经网络</h2>
+
+<h3 id="21-什么是神经网络">2.1 什么是神经网络?</h3>
+
+<p>神经网络只不过是一群连接在一起的神经元。下面是一个简单的神经网络的示意图:
+<img src="https://github.com/loopyme/loopyme.github.io/blob/master/_posts/pic/2019-05-01/3.png?raw=true" alt="network.png" /></p>
+
+<p>这个网络有一个包含两个输入的输入层(Input Layer)，一个包括两个神经元(h1,h2)的隐藏层(Hidden Layer)，一个包含一个神经元(o1)的输出层(Output Layer)。连线表示o1的输入就是h1,h2的输出。</p>
+
+<p>正是这种上层输出作为下层输入的特性，连接起了神经网络。</p>
+
+<p><strong>隐藏层</strong>(Hidden Layer)：输入层和输出层之间的所有层(Layer)都叫隐藏层，一个神经网络中可能有多个隐藏层。</p>
+
+<h3 id="22-神经网络上的正向传播实例">2.2 神经网络上的正向传播实例</h3>
+<p><strong>正向传播</strong>(feedforward):从输入正向传递以获得输出的过程(简单来说就是从左往右计算)</p>
+
+<p>我们就使用上图所示的神经网络，并假设所有神经元的权重都为[0,1],偏置都为0，激活都使用Sigmoid函数。</p>
+
+<p>那么在两个输入都为[2,3]的时候，计算输出的过程就为：</p>
+
+<p><script type="math/tex">% <![CDATA[
+\begin{aligned}
+h_1= h_2&=Sigmoid(w\cdot x+b)\\
+&=Sigmoid([0,1]\cdot [2,3]+0)\\
+&=Sigmoid(3)=0.9526
+\end{aligned} %]]></script>
+<script type="math/tex">% <![CDATA[
+\begin{aligned}
+o_1&= Sigmoid(w\cdot [h_1,h_2]+b)\\
+&=Sigmoid([0,1]\cdot [0.9526,0.9526]+0)\\
+&=Sigmoid(0.9526)=0.7216
+\end{aligned} %]]></script></p>
+
+<p>即神经网络在输入为[2,3]的时候输出为0.7216。</p>
+
+<p>神经网络可以具有任意数量的层，这些层中具有任意数量的神经元。且基本思想保持不变：通过网络中的神经元正向传递以获得输出。在下文中，我们将继续使用上图所示的网络来完成表述。</p>
+
+<h3 id="23-正向传播的代码实现">2.3 正向传播的代码实现</h3>
+<p>依旧是这个神经网络:
+<img src="https://github.com/loopyme/loopyme.github.io/blob/master/_posts/pic/2019-05-01/3.png?raw=true" alt="network.png" /></p>
+
+<p>实现代码：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="c1"># ... 神经元的实现需要粘贴在这里
+</span>
+<span class="k">class</span> <span class="nc">OurNeuralNetwork</span><span class="p">:</span>
+  <span class="s">'''
+  一个神经元，它具有:
+    - 2*输入
+    - 1*隐藏层 = 2*神经元 = (h1, h2)
+    - 1*输出层 = 1*神经元 = (o1)
+
+  每个神经元都具有相同的权重和偏置：
+    - 权重w = [0, 1]
+    - 偏置b = 0
+  '''</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">bias</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># 神经元的实现在1.2中提到
+</span>    <span class="bp">self</span><span class="o">.</span><span class="n">h1</span> <span class="o">=</span> <span class="n">Neuron</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">bias</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">h2</span> <span class="o">=</span> <span class="n">Neuron</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">bias</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">o1</span> <span class="o">=</span> <span class="n">Neuron</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">bias</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">feedforward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="n">out_h1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h1</span><span class="o">.</span><span class="n">feedforward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">out_h2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h2</span><span class="o">.</span><span class="n">feedforward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="c1"># o1 的输入就是 h1 和 h2的输出
+</span>    <span class="n">out_o1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">o1</span><span class="o">.</span><span class="n">feedforward</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">out_h1</span><span class="p">,</span> <span class="n">out_h2</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">out_o1</span>
+</code></pre></div></div>
+
+<p>测试代码：</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">network</span> <span class="o">=</span> <span class="n">OurNeuralNetwork</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">feedforward</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="c1"># 0.7216325609518421
+</span></code></pre></div></div>
+<p>最终我们能获得0.7216作为正向传播输出。</p>
+
+<h2 id="3训练神经网络">3.训练神经网络</h2>
+<h3 id="31-训练任务">3.1 训练任务</h3>
+<p>假设我们已经具有这样的数据：</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>名字</th>
+      <th>体重(磅)</th>
+      <th>身高(英尺)</th>
+      <th>性别</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>张一</td>
+      <td>133</td>
+      <td>65</td>
+      <td>女</td>
+    </tr>
+    <tr>
+      <td>王二</td>
+      <td>160</td>
+      <td>72</td>
+      <td>男</td>
+    </tr>
+    <tr>
+      <td>刘三</td>
+      <td>152</td>
+      <td>70</td>
+      <td>男</td>
+    </tr>
+    <tr>
+      <td>李四</td>
+      <td>120</td>
+      <td>60</td>
+      <td>女</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>我们的任务是训练一个神经网络，使它能通过一个人的身高体重来预测人的性别。</p>
+
+<h3 id="32-损失函数">3.2 损失函数</h3>
+
+<h4 id="321-什么是损失函数">3.2.1 什么是损失函数</h4>
+
+<p>在我们培训我们的网络之前，我们首先需要选取一种方法来量化神经网络预测得有多“好”，这样它就可以尝试做得“更好”。我们需要的就是损失函数。</p>
+
+<p>本文将使用的是均方误差(MSE)损失:</p>
+
+<script type="math/tex; mode=display">MSE= \frac{1}{n}\sum_{i=1}^n (y_{true}-y_{pred})^2</script>
+
+<ul>
+  <li>n 是样本数量，在实例中是4(张一, 王二, 刘三, 李四)</li>
+  <li>y 是目标量，在实例中是性别</li>
+  <li>$y_{true}$ 是真实的结果(正确答案)，在实例中对张一来说就是1</li>
+  <li>$y_{pred}$ 是预测的结果，就是神经网络输出的结果。</li>
+</ul>
+
+<p>$(y_{true}-y_{pred})^2$ 被称作方差(平方误差)，我们这里的损失函数只是取所有方差的平均值(故名“均方差”“mean squared error”)。预测效果越好，损失函数的值就会越低。</p>
+
+<p>也就是：</p>
+<ul>
+  <li>效果好 = 损失小</li>
+  <li>训练神经网络 = 降低损失</li>
+</ul>
+
+<h4 id="322-损失函数计算实例">3.2.2 损失函数计算实例</h4>
+
+<p>我们假设我们的神经网络输出全为0，则损失会有多大？</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>姓名</th>
+      <th>真实值</th>
+      <th>预测值</th>
+      <th>方差</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>张一</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>王二</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>刘三</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>李四</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<script type="math/tex; mode=display">MSE=\frac{1}{4}(1+0+0+1)=0.5</script>
+
+<h4 id="323-损失函数计算实现">3.2.3 损失函数计算实现</h4>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="k">def</span> <span class="nf">mse_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+  <span class="c1"># y_true 和 y_pred 是同样长的numpy.array
+</span>  <span class="k">return</span> <span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>测试代码：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span> <span class="c1"># 0.5
+</span></code></pre></div></div>
+
+<h3 id="33-数据预处理">3.3 数据预处理</h3>
+<p>我们用0表示男性，用1表示女性，并调整数据，使其更容易使用:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>名字</th>
+      <th>体重(135)</th>
+      <th>身高(66)</th>
+      <th>性别</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>张一</td>
+      <td>-2</td>
+      <td>-1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>王二</td>
+      <td>25</td>
+      <td>6</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>刘三</td>
+      <td>17</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>李四</td>
+      <td>-15</td>
+      <td>-6</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>135和66是随意选取的偏移量，以使数据更优美，偏移以及此处未用到的归一化都是常用的调整手段.</p>
+
+<h3 id="34-反向传播">3.4 反向传播</h3>
+<h4 id="341-什么是反向传播">3.4.1 什么是反向传播？</h4>
+<p>我们现在有一个明确的目标:最小化神经网络的损失。并且我们还知道可以通过改变神经网络的权重和偏置来影响它的预测结果，但我们如何才能实现目标呢?</p>
+
+<p>为了简单说明方法，先假设我们的数据集中只有张一:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>名字</th>
+      <th>体重(135)</th>
+      <th>身高(66)</th>
+      <th>性别</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>张一</td>
+      <td>-2</td>
+      <td>-1</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>计算初始均方差：</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+MSE&= \frac{1}{1}\sum_{i=1}^n (y_{true}-y_{pred})^2\\&=(y_{true}-y_{pred})^2\\&=(1-y_{pred})^2
+\end{aligned} %]]></script>
+
+<p>另一种考虑损失的方法是将损失看作权重和偏置的函数。我们先在神经网络中标记每个权重和偏置:
+<img src="https://github.com/loopyme/loopyme.github.io/blob/master/_posts/pic/2019-05-01/4.png?raw=true" alt="networkLabled.png" /></p>
+
+<p>然后，我们可以将损失写成一个多元函数:</p>
+
+<script type="math/tex; mode=display">Loss(w_1,w_2,w_3,w_4,w_5,w_6,b_1,b_2,b_3)</script>
+
+<p>假设我们想要调整$w_1$,那么Loss将会如何随之改变？这时候你就应该想到了偏导数$\frac{\partial Loss}{\partial w_1}$。这不就是偏导数的定义吗？</p>
+
+<p>这时候就需要一些数学推导了。</p>
+
+<p>首先,使用链式法则对偏导数变形。</p>
+
+<script type="math/tex; mode=display">\frac{\partial Loss}{\partial w_1}=\frac{\partial Loss}{\partial y_{pred}}*\frac{\partial y_{pred}}{\partial w_1}</script>
+
+<p>由于我们可以计算Loss的值，所以$\frac{\partial Loss}{\partial y_{pred}}$是我们可以求得的</p>
+
+<script type="math/tex; mode=display">\frac{\partial Loss}{\partial y_{pred}}=\frac{\partial (1-y_{pred})^2}{\partial y_{pred}}=-2(1-y_{pred})</script>
+
+<p>然后我们来想办法解决${\partial y_{pred}}{\partial w_1}$，使用$h_1,h_2,o_1$来分别表示各神经元的输出，那么：</p>
+
+<script type="math/tex; mode=display">y_{pred} =o_1 = Sigmoid(w_5*h_1+w_6*h_2+b_3)</script>
+
+<p>由于$w_1$只影响$h_1$，而与$h_2$无关，那么：</p>
+
+<script type="math/tex; mode=display">\frac{\partial y_{pred}}{\partial w_1}=\frac{\partial y_{pred}}{\partial h_1}*\frac{\partial h_1}{\partial w_1}</script>
+
+<script type="math/tex; mode=display">\frac{\partial y_{pred}}{\partial h_1}=w_5*Sigmoid \prime (w_5h_1+w_6h_2+b_3)</script>
+
+<p>对$\frac{\partial h_1}{\partial w_1}$，我们做相同的处理：</p>
+
+<script type="math/tex; mode=display">h_1 = Sigmoid(w_1x_1+w_2x_2+b_1)</script>
+
+<script type="math/tex; mode=display">\frac{\partial h_1}{\partial w_1}=x_1*Sigmoid \prime (w_1x_1+w_2x_2+b_1)</script>
+
+<p>由于被多次用到，把Sigmoid函数导函数求出来（这里暂时不用这个求导结果来化简上面的式子）：</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned} Sigmoid \prime(x) &= (\frac{1}{1+e^{-x}})\prime\\
+&=\frac{e^{-x}}{(1+e^{-x})^2}\\
+&=Sigmoid(x)*(1-Sigmoid(x))
+\end{aligned} %]]></script>
+
+<p>于是，我们就把$\frac{\partial Loss}{\partial w_1}$给成功拆成了我们能计算的几部分：</p>
+
+<script type="math/tex; mode=display">\frac{\partial Loss}{\partial w_1}=\frac{\partial Loss}{\partial y_{pred}}*\frac{\partial y_{pred}}{\partial h_1}*\frac{\partial h_1}{\partial w_1}</script>
+
+<p>这样逆向计算偏导数的过程称为<strong>反向传播</strong>(“backpropagation”)。</p>
+
+<h4 id="342-反向传播实例">3.4.2 反向传播实例</h4>
+
+<p>为了简化计算，我们继续假设我们的数据集中只有张一:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>名字</th>
+      <th>体重(135)</th>
+      <th>身高(66)</th>
+      <th>性别</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>张一</td>
+      <td>-2</td>
+      <td>-1</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>把所有权重初始化为1，偏置初始化为0。然后进行一次<strong>正向传播</strong>。</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+h_1= h_2&=Sigmoid([w1,w2]\cdot[x1,x2]+b1)\\
+&=Sigmoid(-2-1+0)\\
+&=Sigmoid(-3)=0.0474
+\end{aligned} %]]></script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+o_1&= Sigmoid([w_5,w_6]\cdot [h_1,h_2]+b3)\\
+&=Sigmoid(0.0474+0.0474+0)\\
+&=Sigmoid(0.0948)=0.524
+\end{aligned} %]]></script>
+
+<p>神经网络的结果为0.524，意思是并不能明显判断出是男(1)还是女(0)。</p>
+
+<p>这样以后我们进行一次<strong>反向传播</strong>。也就是计算$\frac{\partial Loss}{\partial w_1}$.</p>
+
+<p>（下面这些计算的推导都在3.4.1中）</p>
+
+<script type="math/tex; mode=display">\frac{\partial Loss}{\partial w_1}=\frac{\partial Loss}{\partial y_{pred}}*\frac{\partial y_{pred}}{\partial h_1}*\frac{\partial h_1}{\partial w_1}</script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+\frac{\partial Loss}{\partial y_{pred}}&= -2(1-y_{pred})\\
+&=-2(1-0.524)=-0.952
+\end{aligned} %]]></script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+\frac{\partial y_{pred}}{\partial h_1}
+&=w_5*Sigmoid \prime (w_5h_1+w_6h_2+b_3)\\
+&=1*Sigmoid \prime (0.0474+0.0474+0)\\
+&= Sigmoid(0.0948)*(1-Sigmoid(0.0948))\\
+&= 0.249
+\end{aligned} %]]></script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+\frac{\partial h_1}{\partial w_1}
+&=x_1*Sigmoid \prime (w_1x_1+w_2x_2+b_1)\\
+&=-2*Sigmoid \prime (-2-1+0)\\
+&=-2*Sigmoid(-3)*(1-Sigmoid(-3))\\
+&=-0.0904
+\end{aligned} %]]></script>
+
+<script type="math/tex; mode=display">\frac{\partial Loss}{\partial w_1}=-0.952*0.249*(-0.0904)=0.0214</script>
+
+<p>完成了这次反向传播，我们就知道了改变w1时对Loss的影响大小：0.0214。</p>
+
+<h3 id="35-随机梯度下降算法">3.5 随机梯度下降算法</h3>
+
+<p>现在我们将使用一种称为随机梯度下降(SGD)的优化算法，它会告诉我们如何改变权重和偏置以最小化损失。大概就是这个更新方程:</p>
+
+<script type="math/tex; mode=display">w_1 ← w_1 - η\frac{\partial Loss}{\partial w_1}</script>
+
+<p>η : 学习速率(Learning rate)，用来控制训练时梯度下降的速度。(并不是越大越好！)</p>
+
+<p>我们做的就只是把w1减去$η\frac{\partial Loss}{\partial w_1}$。</p>
+<ul>
+  <li>若$η\frac{\partial Loss}{\partial w_1}$大于0，w1会增加，以降低Loss（η合适时）</li>
+  <li>若$η\frac{\partial Loss}{\partial w_1}$小于0，w2会减少，以降低Loss（η合适时）</li>
+</ul>
+
+<p>如果我们对神经网络中的每一个权重和偏置都这样做，损失就会慢慢减少，我们的神经网络的预测效果就会改善。
+我们的训练流程如下:</p>
+<ol>
+  <li>从数据集中选择一个示例（随机梯度下降算法要求我们每次只对一个样本进行操作）</li>
+  <li>计算所有“损失对权重或偏置的偏导数”（引号用于辅助断句）</li>
+  <li>更新权重或偏置（注意：这里不是算一个偏导更新一个参数，是全部一起更新）</li>
+  <li>回到步骤1，直至Loss到达满意的区间</li>
+</ol>
+
+<h3 id="36-训练神经网络代码实现">3.6 训练神经网络代码实现</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>名字</th>
+      <th>体重(135)</th>
+      <th>身高(66)</th>
+      <th>性别</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>张一</td>
+      <td>-2</td>
+      <td>-1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>王二</td>
+      <td>25</td>
+      <td>6</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>刘三</td>
+      <td>17</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>李四</td>
+      <td>-15</td>
+      <td>-6</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="https://github.com/loopyme/loopyme.github.io/blob/master/_posts/pic/2019-05-01/4.png?raw=true" alt="networkLabled.png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+  <span class="c1"># sigmoid函数：f(x) = 1 / (1 + e^(-x))
+</span>  <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">deriv_sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+  <span class="c1"># sigmoid函数的导数：f'(x) = f(x) * (1 - f(x))
+</span>  <span class="n">fx</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">fx</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">fx</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">mse_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+  <span class="c1"># y_true 和 y_pred 是同样长的numpy.array
+</span>  <span class="k">return</span> <span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">OurNeuralNetwork</span><span class="p">:</span>
+   <span class="s">'''
+  一个神经元，它具有:
+    - 2*输入
+    - 1*隐藏层 = 2*神经元 = (h1, h2)
+    - 1*输出层 = 1*神经元 = (o1)
+
+  每个神经元都具有相同的权重和偏置：
+    - 权重w = [0, 1]
+    - 偏置b = 0
+  '''</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="c1"># 权重
+</span>    <span class="bp">self</span><span class="o">.</span><span class="n">w1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">w2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">w3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">w4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">w5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">w6</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+
+    <span class="c1"># 偏置
+</span>    <span class="bp">self</span><span class="o">.</span><span class="n">b1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">b2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">b3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">feedforward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="c1"># x 是len=2的numpy.array
+</span>    <span class="n">h1</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w1</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">w2</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b1</span><span class="p">)</span>
+    <span class="n">h2</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w3</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">w4</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b2</span><span class="p">)</span>
+    <span class="n">o1</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w5</span> <span class="o">*</span> <span class="n">h1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">w6</span> <span class="o">*</span> <span class="n">h2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">o1</span>
+
+  <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">all_y_trues</span><span class="p">):</span>
+    <span class="s">'''
+    - data 是(n x 2)的numpy.array,n是样本容量.
+    - all_y_trues 是（n*1）的numpy.array，与data相对应
+    '''</span>
+    <span class="n">learn_rate</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1"># 学习率
+</span>    <span class="c1">#epoch：所有训练数据一次正向传播，向后传播，更新参数的过程
+</span>    <span class="n">epochs</span> <span class="o">=</span> <span class="mi">1000</span> <span class="c1"># epoch次数
+</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+      <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_true</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">all_y_trues</span><span class="p">):</span>
+        <span class="c1"># 正向传播
+</span>        <span class="n">sum_h1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w1</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">w2</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b1</span>
+        <span class="n">h1</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">sum_h1</span><span class="p">)</span>
+
+        <span class="n">sum_h2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w3</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">w4</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b2</span>
+        <span class="n">h2</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">sum_h2</span><span class="p">)</span>
+
+        <span class="n">sum_o1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w5</span> <span class="o">*</span> <span class="n">h1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">w6</span> <span class="o">*</span> <span class="n">h2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b3</span>
+        <span class="n">o1</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">sum_o1</span><span class="p">)</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">o1</span>
+
+        <span class="c1"># 向后传播
+</span>        <span class="c1"># d_L_d_w1 表示 " L对w1的偏导数"
+</span>        <span class="n">d_L_d_ypred</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span>
+
+        <span class="c1"># 神经元 o1
+</span>        <span class="n">d_ypred_d_w5</span> <span class="o">=</span> <span class="n">h1</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_o1</span><span class="p">)</span>
+        <span class="n">d_ypred_d_w6</span> <span class="o">=</span> <span class="n">h2</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_o1</span><span class="p">)</span>
+        <span class="n">d_ypred_d_b3</span> <span class="o">=</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_o1</span><span class="p">)</span>
+
+        <span class="n">d_ypred_d_h1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w5</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_o1</span><span class="p">)</span>
+        <span class="n">d_ypred_d_h2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w6</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_o1</span><span class="p">)</span>
+
+        <span class="c1"># 神经元 h1
+</span>        <span class="n">d_h1_d_w1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_h1</span><span class="p">)</span>
+        <span class="n">d_h1_d_w2</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_h1</span><span class="p">)</span>
+        <span class="n">d_h1_d_b1</span> <span class="o">=</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_h1</span><span class="p">)</span>
+
+        <span class="c1"># 神经元 h2
+</span>        <span class="n">d_h2_d_w3</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_h2</span><span class="p">)</span>
+        <span class="n">d_h2_d_w4</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_h2</span><span class="p">)</span>
+        <span class="n">d_h2_d_b2</span> <span class="o">=</span> <span class="n">deriv_sigmoid</span><span class="p">(</span><span class="n">sum_h2</span><span class="p">)</span>
+
+        <span class="c1"># 更新权重和偏置
+</span>        <span class="c1"># 神经元 h1
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">w1</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_h1</span> <span class="o">*</span> <span class="n">d_h1_d_w1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w2</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_h1</span> <span class="o">*</span> <span class="n">d_h1_d_w2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b1</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_h1</span> <span class="o">*</span> <span class="n">d_h1_d_b1</span>
+
+        <span class="c1"># 神经元 h2
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">w3</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_h2</span> <span class="o">*</span> <span class="n">d_h2_d_w3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w4</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_h2</span> <span class="o">*</span> <span class="n">d_h2_d_w4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b2</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_h2</span> <span class="o">*</span> <span class="n">d_h2_d_b2</span>
+
+        <span class="c1"># 神经元 o1
+</span>        <span class="bp">self</span><span class="o">.</span><span class="n">w5</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_w5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w6</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_w6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b3</span> <span class="o">-=</span> <span class="n">learn_rate</span> <span class="o">*</span> <span class="n">d_L_d_ypred</span> <span class="o">*</span> <span class="n">d_ypred_d_b3</span>
+
+      <span class="c1"># --- 每10epoch计算输出一次Loss
+</span>      <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">y_preds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feedforward</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mse_loss</span><span class="p">(</span><span class="n">all_y_trues</span><span class="p">,</span> <span class="n">y_preds</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Epoch </span><span class="si">%</span><span class="s">d loss: </span><span class="si">%.3</span><span class="s">f"</span> <span class="o">%</span> <span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">loss</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>测试代码：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 数据集定义
+</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+  <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>  <span class="c1"># 张一
+</span>  <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>   <span class="c1"># 王二
+</span>  <span class="p">[</span><span class="mi">17</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>   <span class="c1"># 刘三
+</span>  <span class="p">[</span><span class="o">-</span><span class="mi">15</span><span class="p">,</span> <span class="o">-</span><span class="mi">6</span><span class="p">],</span> <span class="c1"># 李四
+</span><span class="p">])</span>
+<span class="n">all_y_trues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+  <span class="mi">1</span><span class="p">,</span> <span class="c1"># 张一
+</span>  <span class="mi">0</span><span class="p">,</span> <span class="c1"># 王二
+</span>  <span class="mi">0</span><span class="p">,</span> <span class="c1"># 刘三
+</span>  <span class="mi">1</span><span class="p">,</span> <span class="c1"># 李四
+</span><span class="p">])</span>
+
+<span class="c1"># 训练!
+</span><span class="n">network</span> <span class="o">=</span> <span class="n">OurNeuralNetwork</span><span class="p">()</span>
+<span class="n">network</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">all_y_trues</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>于是我们就获得一个训练好的神经网络，接下来用它来预测一下：</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 用一些神经网络没见过的数据来做预测
+</span><span class="n">emily</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">])</span> <span class="c1"># 128 pounds, 63 inches
+</span><span class="n">frank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>  <span class="c1"># 155 pounds, 68 inches
+</span><span class="k">print</span><span class="p">(</span><span class="s">"Emily: </span><span class="si">%.3</span><span class="s">f"</span> <span class="o">%</span> <span class="n">network</span><span class="o">.</span><span class="n">feedforward</span><span class="p">(</span><span class="n">emily</span><span class="p">))</span> <span class="c1"># 0.951 - F
+</span><span class="k">print</span><span class="p">(</span><span class="s">"Frank: </span><span class="si">%.3</span><span class="s">f"</span> <span class="o">%</span> <span class="n">network</span><span class="o">.</span><span class="n">feedforward</span><span class="p">(</span><span class="n">frank</span><span class="p">))</span> <span class="c1"># 0.039 - M
+</span></code></pre></div></div>
+
+<p>完美！快速回顾一下我们在这篇文章中做的:</p>
+<ul>
+  <li>介绍了<strong>神经元</strong>，神经网络的组成部分。</li>
+  <li>在我们的神经元中使用<strong>Sigmoid激活函数</strong>。</li>
+  <li>意识到<strong>神经网络</strong>只是一些连接在一起的神经元。</li>
+  <li>创建了一个<strong>数据集</strong>，其中将体重和身高作为输入(或特性)，性别作为输出(或标签)。</li>
+  <li>学习了<strong>损失函数</strong>和均方误差损失。</li>
+  <li>意识到<strong>训练</strong>一个网络只是把它的损失函数值降到最低。</li>
+  <li>使用<strong>反向传播</strong>计算偏导数。</li>
+  <li>利用<strong>随机梯度下降法</strong>(SGD)对网络进行训练。</li>
+</ul>
+
+<p>接下来进阶学习需要做的:</p>
+<ul>
+  <li>使用<strong>机器学习库</strong>(如Tensorflow、Keras和PyTorch)来训练更大/更好的神经网络。</li>
+  <li>发现Sigmoid以外的其他<strong>激活函数</strong>。</li>
+  <li>发现除随机梯度下降算法（SGD）之外的其他<strong>优化器</strong>。</li>
+  <li>学习彻底改变了计算机视觉的<strong>卷积神经网络</strong>。</li>
+  <li>学习经常用于自然语言处理(NLP)的<strong>递归神经网络</strong>。</li>
+</ul>
+:ET

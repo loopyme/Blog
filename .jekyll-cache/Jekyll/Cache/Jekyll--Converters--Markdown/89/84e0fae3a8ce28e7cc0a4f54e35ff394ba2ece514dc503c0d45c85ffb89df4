@@ -1,0 +1,62 @@
+I"�!<h2 id="调整代码高亮">调整代码高亮</h2>
+
+<p>按照<a href="https://loopyme.github.io/2019/03/18/howtomakeablog/">这篇</a>文章搭建出的网站，代码高亮是亮色的，这对我这种什么都喜欢选暗色主题的“黑人”来说，不太适应。所以准备对此进行调整。</p>
+
+<p>Jekyll的Markdown插件一般喜欢用kramdown，而它使用的语法高亮工具是Rouge（好像还没法用其他的了）。所以我们需要做的就是对rouge的配色做调整。读一读文档，发现rouge在处理代码高亮的时候配色是用的<code class="highlighter-rouge">./css/syntax.css</code>里的配置。</p>
+
+<p>所以就有两种解决方案：</p>
+<ol>
+  <li>手动配色。 选择你喜欢的配色,就像<code class="highlighter-rouge">#ffffff</code>这样手动设置组分颜色。</li>
+  <li>使用主题配色。</li>
+</ol>
+
+<p>以下简述“使用主题配色”的操作步骤：</p>
+<ol>
+  <li><strong>安装rouge</strong>： (For Ubuntu:<code class="highlighter-rouge">sudo gem install rouge</code>)</li>
+  <li><strong>查看可用主题</strong>：(For Ubuntu:<code class="highlighter-rouge">rougify help style</code>)</li>
+  <li><strong>生成配色</strong>：因为我不想直接覆盖<code class="highlighter-rouge">syntax.css</code>，这里生成到<code class="highlighter-rouge">temp.css</code>里，等下手动覆盖过去(For Ubuntu:<code class="highlighter-rouge">rougify style {你选择的主题名字} &gt; ./temp.css</code>)</li>
+  <li><strong>覆盖原配色</strong>：用<code class="highlighter-rouge">./temp.css</code>里的代码，覆盖<code class="highlighter-rouge">./css/syntax.css</code>里的全部代码</li>
+</ol>
+
+<h2 id="日志字数统计">日志字数统计</h2>
+<p>在<code class="highlighter-rouge">post.html</code>中使用<code class="highlighter-rouge">page.content | strip_html | strip_newlines | remove: " " | size</code>来统计文章字数</p>
+
+<h2 id="增加点击效果">增加点击效果</h2>
+<p>加一个script就好了</p>
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;script </span><span class="na">type = </span><span class="s">"text/javascript"</span><span class="nt">&gt;</span>
+<span class="kd">var</span> <span class="nx">mouseSum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="nx">jQuery</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">$</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$</span><span class="p">(</span><span class="dl">"</span><span class="s2">body</span><span class="dl">"</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Array</span><span class="p">(</span><span class="dl">"</span><span class="s2">富强</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">民主</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">文明</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">和谐</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">自由</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">平等</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">公正</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">法治</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">爱国</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">敬业</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">诚信</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">友善</span><span class="dl">"</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">$i</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="dl">"</span><span class="s2">&lt;span/&gt;</span><span class="dl">"</span><span class="p">).</span><span class="nx">text</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">mouseSum</span><span class="p">]);</span>
+        <span class="nx">mouseSum</span> <span class="o">=</span> <span class="p">(</span><span class="nx">mouseSum</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nx">a</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+        <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">pageX</span><span class="p">,</span>
+        <span class="nx">y</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">pageY</span><span class="p">;</span>
+        <span class="nx">$i</span><span class="p">.</span><span class="nx">css</span><span class="p">({</span>
+            <span class="dl">"</span><span class="s2">z-index</span><span class="dl">"</span><span class="p">:</span> <span class="mi">9999999</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">top</span><span class="dl">"</span><span class="p">:</span> <span class="nx">y</span> <span class="o">-</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">left</span><span class="dl">"</span><span class="p">:</span> <span class="nx">x</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">position</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">absolute</span><span class="dl">"</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">font-weight</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">bold</span><span class="dl">"</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">color</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">#6651ff</span><span class="dl">"</span>
+        <span class="p">});</span>
+        <span class="nx">$</span><span class="p">(</span><span class="dl">"</span><span class="s2">body</span><span class="dl">"</span><span class="p">).</span><span class="nx">append</span><span class="p">(</span><span class="nx">$i</span><span class="p">);</span>
+        <span class="nx">$i</span><span class="p">.</span><span class="nx">animate</span><span class="p">({</span>
+            <span class="dl">"</span><span class="s2">top</span><span class="dl">"</span><span class="p">:</span> <span class="nx">y</span> <span class="o">-</span> <span class="mi">180</span><span class="p">,</span>
+            <span class="dl">"</span><span class="s2">opacity</span><span class="dl">"</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">},</span>
+        <span class="mi">1500</span><span class="p">,</span>
+        <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">$i</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+<span class="nt">&lt;/script&gt;</span>
+
+</code></pre></div></div>
+
+<p>因为没有jQuery，所以需要先引入</p>
+
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nt">&lt;script </span><span class="na">language=</span><span class="s">"javascript"</span> <span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"https://cdn.staticfile.org/jquery/1.7.2/jquery.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div></div>
+:ET

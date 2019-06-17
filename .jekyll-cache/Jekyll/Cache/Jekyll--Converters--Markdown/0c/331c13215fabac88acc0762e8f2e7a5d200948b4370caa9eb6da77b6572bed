@@ -1,0 +1,70 @@
+I"N<h2 id="先来看一段jupyter里写的代码">先来看一段Jupyter里写的代码</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">random</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">big_num</span> <span class="o">=</span> <span class="mi">9999999</span>
+<span class="n">test_obj</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">-</span><span class="n">big_num</span><span class="p">,</span><span class="n">big_num</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">big_num</span><span class="p">)]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
+<span class="n">res0</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_obj</span><span class="p">:</span>
+    <span class="n">res0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span> <span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPU times: user 1.48 s, sys: 55.9 ms, total: 1.53 s
+Wall time: 1.53 s
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
+<span class="n">res1</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_obj</span><span class="p">:</span>
+    <span class="n">res1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">&amp;</span><span class="mh">0x1</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPU times: user 1.76 s, sys: 24 ms, total: 1.78 s
+Wall time: 1.79 s
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
+<span class="n">res2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="n">x</span><span class="o">&amp;</span><span class="mh">0x1</span><span class="o">==</span><span class="mi">1</span><span class="p">,</span><span class="n">test_obj</span><span class="p">))</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPU times: user 1.33 s, sys: 28 ms, total: 1.36 s
+Wall time: 1.36 s
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%%</span><span class="n">time</span>
+<span class="n">res3</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">&amp;</span><span class="mh">0x1</span><span class="o">==</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_obj</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPU times: user 885 ms, sys: 24 ms, total: 909 ms
+Wall time: 912 ms
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">res0</span><span class="o">==</span><span class="n">res1</span><span class="o">==</span><span class="n">res2</span><span class="o">==</span><span class="n">res3</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>True
+</code></pre></div></div>
+
+<h2 id="结论">结论</h2>
+
+<p>在蟒蛇语中:</p>
+
+<ol>
+  <li>对int类型除二是有自动优化的,甚至%2比位运算&amp;0x1更快.</li>
+  <li>在对列表做操作时,使用lambda之类的内嵌表达式比循环效率更高.</li>
+  <li>取余运算结果都是正数.</li>
+  <li>==运算符可以连续使用.</li>
+</ol>
+
+<p>我的观点(不保证正确):</p>
+
+<ol>
+  <li>真正的Pythonic不用考虑考虑位运算之类的骚操作,就像sort快得像龙卷风一样,用就好好用,别想那么多.除非你是想研究或者设计这个语言.</li>
+  <li>python是解释型的,所以一般情况下当你手动的帮它坍缩算法的复杂度和可能性时,就能增加效率.(比如lambda)</li>
+  <li>上两条加起来:写Python应该专注于目标情景中向上的算法的简化,而不是目标情景中向下的算法的实现.</li>
+</ol>
+:ET

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="No fun, go die.">
+    <meta name="keywords"  content="LoopyTech, Blog">
+    <meta name="theme-color" content="#000000">
+    
+    <title>学习日志</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.png">
+
+    <!-- Safari Webpage Icon    by-BY -->
+    <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/page2/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    <!-- Pygments Github CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+
+    <!-- Hux Delete, sad but pending in China
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/
+    css'>
+    -->
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">LoopyTech</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/about/">About</a>
+                    </li>
+                    
+                    <li>
+                        <a href="/tags/">Tags</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    var __HuxNav__ = {
+        close: function(){
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        },
+        open: function(){
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+
+    // Bind Event
+    $toggle.addEventListener('click', function(e){
+        if ($navbar.className.indexOf('in') > 0) {
+            __HuxNav__.close()
+        }else{
+            __HuxNav__.open()
+        }
+    })
+
+    /**
+     * Since Fastclick is used to delegate 'touchstart' globally
+     * to hack 300ms delay in iOS by performing a fake 'click',
+     * Using 'e.stopPropagation' to stop 'touchstart' event from 
+     * $toggle/$collapse will break global delegation.
+     * 
+     * Instead, we use a 'e.target' filter to prevent handler
+     * added to document close HuxNav.  
+     *
+     * Also, we use 'click' instead of 'touchstart' as compromise
+     */
+    document.addEventListener('click', function(e){
+        if(e.target == $toggle) return;
+        if(e.target.className == 'icon-bar') return;
+        __HuxNav__.close();
+    })
+</script>
+
+
+    <!-- Page Header -->
+<header class="intro-header" style="background-image: url('/img/home-bg.jpg')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
+                <div class="site-heading">
+                    <h1>LoopyTech</h1>
+                    <!--<hr class="small">-->
+                    <span class="subheading"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="container">
+	<div class="row">
+        
+
+<!-- USE SIDEBAR -->
+    <!-- PostList Container -->
+    		<div class="
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                postlist-container
+            ">
+    			
+<div class="post-preview">
+    <a href="/2019/04/16/blog/">
+        <h2 class="post-title">
+            Jekyll调整
+        </h2>
+        
+        <h3 class="post-subtitle">
+            对Jekyll搭建的网站进行前端调整
+        </h3>
+        
+        <div class="post-content-preview">
+            调整代码高亮
+
+按照这篇文章搭建出的网站，代码高亮是亮色的，这对我这种什么都喜欢选暗色主题的“黑人”来说，不太适应。所以准备对此进行调整。
+
+Jekyll的Markdown插件一般喜欢用kramdown，而它使用的语法高亮工具是Rouge（好像还没法用其他的了）。所以我们需要做的就是对rouge的配色做调整。读一读文档，发现rouge在处理代码高亮的时候配色是用的./css/syntax.c...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 16, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/15/dfl/">
+        <h2 class="post-title">
+            给视频里的人换脸
+        </h2>
+        
+        <h3 class="post-subtitle">
+            DeepFakeLab-Colab
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  以下代码都是ipynb的md导出,代码源自这里,用于便携的在Colab上调用DFL项目的源码进行快捷方便的换脸
+
+
+DFL-Colab
+
+Step 1. 配置环境
+
+  选择clone
+  自动安装相关依赖文件
+
+
+#@title 看不懂就选克隆
+
+Mode = "克隆" #@param ["克隆", "拉取"]
+
+if (Mode == "克隆"):
+  !git clone htt...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 15, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/09/calcu/">
+        <h2 class="post-title">
+            使用递归计算中缀表达式
+        </h2>
+        
+        <h3 class="post-subtitle">
+            数据结构作业
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  虽然我遵循着“作业截至即公开”的原则，但这次代码写得比较个性化（俗称”骚”)，不容易涉及作业雷同,所以提前就post了出来。
+
+
+设计思路
+
+  鲁迅说过：树都能用递归解决。
+
+  鲁迅还说过：不能重复造轮子。
+
+
+根据以上两个原则，再加上我写过几次经典的中缀表达式计算了（就是用栈算后缀表达式再算值那种经典套路），所以我决心使用递归来处理这个问题。
+
+同时，解题也是用的“刷算法题”代码...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 9, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/05/aca/">
+        <h2 class="post-title">
+            ACA-大数据 总结
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（13）
+        </h3>
+        
+        <div class="post-content-preview">
+            终于把ACA大数据课程学完了，认证也拿到手了。(如果你认识我本人，访问”http://{我的名字每个字的首字母}.loopy.tech”就能看到无码版原图)
+
+
+总的来说，这门大数据课程挺有趣的，它与其他网课关键的不同在于，它是基于一家公司的实际操作逻辑和业务流程。学完这门课，对阿里巴巴的整个大数据架构就有了一定的理解，也知道了阿里对数据的处理是怎么样的一个业务逻辑。
+
+仔细来说，其实就是学...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 5, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/05/pi/">
+        <h2 class="post-title">
+            机器学习平台-PAI
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（12）
+        </h3>
+        
+        <div class="post-content-preview">
+            机器学习
+
+  对于某类任务T和性能度量P，如果一个计算机程序在T上以P衡量的性能随着经验而自我完善，那么我们称这个计算机程序在从经验E中学习。 -Tom Mitchell《机器学习》
+
+
+上面这个这是我个人感觉最好的“机器学习”定义,记得第一次听到这个定义是在吴恩达的视频里，立刻就感觉这个定义很优美。
+
+比如最经典的西洋跳棋：
+
+  T ：下西洋跳棋
+  P ：赢棋概率
+  E ：和自己下...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 5, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/05/crispdm/">
+        <h2 class="post-title">
+            KDD标准流程
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（11）
+        </h3>
+        
+        <div class="post-content-preview">
+            CRISP-DM（跨行业数据挖掘标准流程）
+
+  Cross-industry standard process for data mining, known as CRISP-DM, is an open standard process model that describes common approaches used by data mining experts. It is th...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 5, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/04/datav/">
+        <h2 class="post-title">
+            DataV-做一个可视化大屏
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（10）
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  DataV旨让更多的人看到数据可视化的魅力，帮助非专业的工程师通过图形化的界面轻松搭建专业水准的可视化应用，满足您会议展览、业务监控、风险预警、地理信息分析等多种业务的展示需求。
+
+
+大屏分类
+
+  展示类大屏 - 提供给领导/其他人秀数据
+  分析类大屏 - 提供给决策人员辅助决策
+  监视类大屏 - 提供给运维人员进行监视
+
+
+设计理念
+
+  业务架构 -&gt; 板块拆分 -&g...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 4, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/03/quickBi/">
+        <h2 class="post-title">
+            QuickBi-阿里是怎么做数据报表的
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（9）
+        </h3>
+        
+        <div class="post-content-preview">
+            
+  Quick BI – 专为云上用户量身打造的新一代智能BI服务平台。
+
+
+大数据整个平台就是：数据源-&gt;数据分析-&gt;数据展现，BI平台上的操作很自然。所以这篇日志也没啥好写的，乱七八糟的记了些东西。
+
+支持的数据源
+
+  云数据源：
+    
+      MaxCompute
+      AnalyticDB
+      RDS(MySQL,SQLServer)
+     ...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 3, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/02/DataIDE/">
+        <h2 class="post-title">
+            DateIDE基本操作
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（8）
+        </h3>
+        
+        <div class="post-content-preview">
+            1.准备资源环境
+
+  申请MaxCompute和RDS的资源
+  使用企业RAM用户登陆控制台，选择DataWorks功能，进入目标项目进行数据开发。
+然后进入了DataStudio的开发界面
+
+
+
+2.完成操作
+2.1 数据同步
+把MySQL的数据同步到MaxCompute中，也就是把业务数据导入工作区的过程。
+
+  在RDS里新建一个数据库，自动运行
+  在RDS里新建一个普通权限用户...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 2, 2019
+    </p>
+</div>
+<hr>
+
+<div class="post-preview">
+    <a href="/2019/04/01/dataide/">
+        <h2 class="post-title">
+            DataIDE
+        </h2>
+        
+        <h3 class="post-subtitle">
+            ACA课程学习笔记（7）
+        </h3>
+        
+        <div class="post-content-preview">
+            基本概念
+
+  任务（Task）:对数据执行的操作。通常输入输出都是数据表。主要分三种：节点任务，工作流任务（多个节点，互相依赖），内部节点。
+  实例（Instance）：某个任务在某个时刻的快照。包含运行时间，状态，日志等信息。任务经过调度，手动触发后生成一个实例。与MaxCompute不同的是，自动调度的任务会提前生成实例。
+  提交（Submit）：开发的节点任务·工作流任务从开发环...
+        </div>
+    </a>
+    <p class="post-meta">
+        Posted by Loopy on April 1, 2019
+    </p>
+</div>
+<hr>
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+    <li class="previous">
+        <a href="/">&larr; Newer Posts</a>
+    </li>
+    
+    
+    <li class="next">
+        <a href="/page3">Older Posts &rarr;</a>
+    </li>
+    
+</ul>
+
+
+    		</div>
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-3 col-lg-offset-0
+                col-md-3 col-md-offset-0
+                col-sm-12
+                col-xs-12
+                sidebar-container
+            ">
+                <!-- Featured Tags -->
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                            
+                                <a href="/tags/#ACA-BigData" title="ACA-BigData" rel="13">
+                                    ACA-BigData
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#LeetCode" title="LeetCode" rel="8">
+                                    LeetCode
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#List" title="List" rel="3">
+                                    List
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#Str" title="Str" rel="4">
+                                    Str
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Algorithm" title="Algorithm" rel="8">
+                                    Algorithm
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#Fun" title="Fun" rel="10">
+                                    Fun
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#AI" title="AI" rel="7">
+                                    AI
+                                </a>
+                            
+                        
+                            
+                                <a href="/tags/#install" title="install" rel="3">
+                                    install
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#ubuntu" title="ubuntu" rel="3">
+                                    ubuntu
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                                <a href="/tags/#Tutorial" title="Tutorial" rel="4">
+                                    Tutorial
+                                </a>
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Short About -->
+                <section class="visible-md visible-lg">
+                    <hr><h5><a href="/about/">ABOUT ME</a></h5>
+                    <div class="short-about">
+                        
+                            <a href="/about">
+                                <img src="http://file.loopy.tech/share/logo.jpg"/>
+                            </a>
+                        
+                        
+                            <p>No fun, go die.</p>
+                        
+                        <!-- SNS Link -->
+                        <ul class="list-inline">
+                            
+                            <li>
+                                <a href="/feed.xml">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            <!-- add jianshu add target = "_blank" to <a> by BY -->
+                            
+                            
+                            
+                            
+                            
+                            
+                            <li>
+                                <a target="_blank" href="https://github.com/loopyme">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-circle fa-stack-2x"></i>
+                                        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            
+                        </ul>
+                        
+                            <p>✉️ peter@mail.loopy.tech</p>
+                        
+                    </div>
+                </section>
+                <!-- Friends Blog -->
+                
+    		</div>
+        
+	</div>
+</div>
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    
+                    <li>
+                        <a href="/feed.xml">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <!-- add jianshu add target = "_blank" to <a> by BY -->
+                    
+                    
+
+                    <!-- add Weibo, Zhihu by Hux, add target = "_blank" to <a> by Hux -->
+                    
+                    
+
+
+                    
+                    
+                    <li>
+                        <a target="_blank" href="https://github.com/loopyme">
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x"></i>
+                                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; LoopyTech 2019
+                    <br>
+                    Theme on <a href="https://github.com/loopyme/loopy.github.io.git">GitHub</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=loopyme&repo=loopyme.github.io&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Service Worker -->
+
+<script type="text/javascript">
+    if(navigator.serviceWorker){
+        // For security reasons, a service worker can only control the pages that are in the same directory level or below it. That's why we put sw.js at ROOT level.
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {console.log('Service Worker Registered. ', registration)})
+            .catch((error) => {console.log('ServiceWorker registration failed: ', error)})
+    }
+</script>
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!-- 
+     Because of the native support for backtick-style fenced code blocks 
+     right within the Markdown is landed in Github Pages, 
+     From V1.6, There is no need for Highlight.js, 
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0  
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/ 
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers   
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async('/js/jquery.tagcloud.js',function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-131324966-3';
+    var _gaDomain = 'auto';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+
+<!-- Side Catalog -->
+
+
+
+
+
+<!-- Image to hack wechat -->
+<img src="/img/apple-touch-icon.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>

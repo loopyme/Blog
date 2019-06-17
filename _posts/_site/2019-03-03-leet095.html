@@ -1,0 +1,233 @@
+<blockquote>
+  <p>95.给定一个整数 n，生成所有由 1 … n 为节点所组成的二叉搜索树。</p>
+
+  <p>96.给定一个整数 n，求以 1 … n 为节点组成的二叉搜索树有多少种？</p>
+
+  <blockquote>
+    <p>示例:</p>
+
+    <p>输入: 3</p>
+
+    <p>95.输出:
+[
+ [1,null,3,2],
+ [3,2,null,1],
+ [3,1,null,null,2],
+ [2,1,3],
+ [1,null,2,null,3]
+]</p>
+
+    <p>96.输出: 5</p>
+
+    <p>解释:</p>
+
+    <p>以上的输出对应以下 5 种不同结构的二叉搜索树：</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   1         3     3      2      1
+    \       /     /      / \      \
+     3     2     1      1   3      2
+    /     /       \                 \
+   2     1         2                 3
+</code></pre></div>    </div>
+  </blockquote>
+</blockquote>
+
+<p>我感觉之前的学习曲线有点太平坦了,为了适当增大学习曲线斜率,我把Leetcode博客模板生成器升级了,从现在开始,题号不会顺序增减,而是随机产生一个题号,同时产成特定题号的概率与题号大小成线性负相关.这样感觉好玩点.</p>
+
+<p>第一个幸运儿是95,看了一眼题决定把它和96一起解决.</p>
+
+<p>这两道题都是BST,先找有多少种可能,再把它们生成出来.</p>
+
+<p>先来解决数数的问题.</p>
+
+<h3 id="1-动态规划96">1. 动态规划(<em>96</em>)</h3>
+
+<p>动态规划的关键在于分对子问题,所谓divide.</p>
+
+<p>首先申明两个状态:</p>
+<ul>
+  <li>A<sub>(n)</sub> 表示 以1~n为节点组成的BST种数</li>
+  <li>B<sub>(i,n)</sub>表示 根节点为i时,以1~n为节点组成的BST种数</li>
+</ul>
+
+<p>那么有:</p>
+<ul>
+  <li>
+    <p>A<sub>(n)</sub> =  <img src="https://www.zhihu.com/equation?tex= \sum_{i=1}^{i=n}B_(i,n)" /></p>
+  </li>
+  <li>
+    <p>B<sub>(i,n)</sub> =  A<sub>(i-1)</sub> * A<sub>(n-i)</sub></p>
+  </li>
+</ul>
+
+<p>这分别是由于:</p>
+<ul>
+  <li>计算A<sub>(n)</sub>,只需限制根节点为(1~n),则可分为n个子问题,即转化为求B</li>
+  <li>计算B<sub>(i,n)</sub>,只需分开考虑左子树,和右子树.即转化为求A</li>
+</ul>
+
+<p>问题就解决了</p>
+
+<p>为了方便理解,求解流程是:
+A<sub>(1)</sub> -&gt; B<sub>(1,2)</sub>&amp;B<sub>(2,2)</sub> -&gt; A<sub>(2)</sub> -&gt; B<sub>(1,3)</sub>&amp;B<sub>(2,3)</sub>&amp;B<sub>(3,3)</sub> -&gt; A<sub>(3)</sub> -&gt; ……</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">numTrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+      <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="c"># a[i] = A(i)</span>
+      <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+      <span class="n">temp</span> <span class="o">=</span><span class="mi">0</span>
+      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+          <span class="n">temp</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">]</span>
+        <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span><span class="p">,</span><span class="mi">0</span>
+      <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>执行用时: 52 ms, 在Unique Binary Search Trees的Python3提交中击败了13.54% 的用户</p>
+
+  <p>内存消耗: 13.3 MB, 在Unique Binary Search Trees的Python3提交中击败了0.00% 的用户</p>
+</blockquote>
+
+<hr />
+<h3 id="2打表96">2.打表(<em>96</em>)</h3>
+<p>你也看到了,方法一的效果不太好,这些人是怎么把时间,内存刷上去的?</p>
+
+<p>我决定打表试下,先用自己电脑跑一遍表:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">numTrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c"># a[i] = A(i)</span>
+        <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">temp</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">]</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">'__main__'</span><span class="p">:</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="s">'''
+    class Solution(object):
+        def numTrees(self, n):
+            result = {}
+            return result[n]
+    '''</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Solution</span><span class="p">()</span><span class="o">.</span><span class="n">numTrees</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">code</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)))</span>
+
+</code></pre></div></div>
+
+<p>然后把下面这段代码丢进去跑,结果发现时间内存不变.</p>
+
+<p>是平台崩了?</p>
+
+<p>还是我没充钱?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">numTrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">132</span><span class="p">,</span> <span class="mi">429</span><span class="p">,</span> <span class="mi">1430</span><span class="p">,</span> <span class="mi">4862</span><span class="p">,</span> <span class="mi">16796</span><span class="p">,</span> <span class="mi">58786</span><span class="p">,</span> <span class="mi">208012</span><span class="p">,</span> <span class="mi">742900</span><span class="p">,</span> <span class="mi">2674440</span><span class="p">,</span> <span class="mi">9694845</span><span class="p">,</span> <span class="mi">35357670</span><span class="p">,</span> <span class="mi">129644790</span><span class="p">,</span> <span class="mi">477638700</span><span class="p">,</span> <span class="mi">1767263190</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>执行用时: 80 ms, 在Unique Binary Search Trees的Python3提交中击败了2.59% 的用户</p>
+
+  <p>内存消耗: 13.2 MB, 在Unique Binary Search Trees的Python3提交中击败了0.00% 的用户</p>
+</blockquote>
+
+<hr />
+<h3 id="3-动态规划-递归95">3. 动态规划-&gt;递归(<em>95</em>)</h3>
+
+<p>不管了,反正这道题我会了,平台怎么弄出来的鬼成绩我也是彻底想不明白了,继续做下一道</p>
+
+<p>95和96差不多,不同的是需要把结构也保存下来,</p>
+
+<p>按照原来的思路,引入一个tree_list拿来存结构,直接写,发现其实贼麻烦,不要相信”看懂96就行,95写起来很简单”</p>
+
+<p>想了很久,发现只有递归大法好,思路是一样的,只不过是用递归来写而已,在这个方法之后我将补上一个96-递归的代码</p>
+
+<p>我是先看了<a href="https://blog.csdn.net/fuxuemingzhu/article/details/80778651">这里</a>的代码再来写的,结果无论怎么写都和原来的一样,就像是直接copy的…</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">generateTrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TreeNode</span><span class="p">]:</span>
+      <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="p">[]</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateTreesR</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">generateTreesR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">left</span> <span class="o">&gt;</span> <span class="n">right</span><span class="p">:</span><span class="k">return</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+          <span class="n">left_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateTreesR</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+          <span class="n">right_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generateTreesR</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+          <span class="k">for</span> <span class="n">left_node</span> <span class="ow">in</span> <span class="n">left_nodes</span><span class="p">:</span>
+              <span class="k">for</span> <span class="n">right_node</span> <span class="ow">in</span> <span class="n">right_nodes</span><span class="p">:</span>
+                  <span class="n">root</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                  <span class="n">root</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">left_node</span>
+                  <span class="n">root</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right_node</span>
+                  <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>执行用时: 84 ms, 在Unique Binary Search Trees II的Python3提交中击败了58.08% 的用户</p>
+
+  <p>内存消耗: 15 MB, 在Unique Binary Search Trees II的Python3提交中击败了0.00% 的用户</p>
+</blockquote>
+
+<h1 id="4-直接递归96">4. 直接递归(<em>96</em>)</h1>
+<p>现在需要构造一个递归函数,它能计算出(left,right)之间的所有节点的BST种数,</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">numTrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">numTreesR</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">numTreesR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">left</span><span class="p">,</span><span class="n">right</span><span class="p">):</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">if</span> <span class="n">left</span> <span class="o">&gt;</span> <span class="n">right</span><span class="p">:</span><span class="k">return</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">left</span> <span class="o">==</span> <span class="n">right</span><span class="p">:</span><span class="k">return</span> <span class="mi">1</span>
+      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+          <span class="n">left_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numTreesR</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+          <span class="n">right_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numTreesR</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+          <span class="n">result</span> <span class="o">+=</span> <span class="n">right_num</span><span class="o">*</span><span class="n">left_num</span>
+      <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+<blockquote>
+  <p>答案正确,但时间超标了,未通过</p>
+</blockquote>
+
+<h1 id="5-带备忘录的递归96">5. 带备忘录的递归(<em>96</em>)</h1>
+
+<p>既然直接递归通不过,那就是时候召唤字典了</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Solution</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">dic</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">numTrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">numTreesR</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">numTreesR</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">left</span><span class="p">,</span><span class="n">right</span><span class="p">):</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">if</span> <span class="n">left</span> <span class="o">&gt;</span> <span class="n">right</span><span class="p">:</span><span class="k">return</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="n">left</span> <span class="o">==</span> <span class="n">right</span><span class="p">:</span><span class="k">return</span> <span class="mi">1</span>
+      <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">left</span><span class="p">)</span><span class="o">+</span><span class="s">","</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">right</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dic</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">left</span><span class="p">)</span><span class="o">+</span><span class="s">","</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">right</span><span class="p">)]</span>
+      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+          <span class="n">left_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numTreesR</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+          <span class="n">right_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numTreesR</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+          <span class="n">result</span> <span class="o">+=</span> <span class="n">right_num</span><span class="o">*</span><span class="n">left_num</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">dic</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">left</span><span class="p">)</span><span class="o">+</span><span class="s">","</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">right</span><span class="p">)]</span> <span class="o">=</span><span class="n">result</span>
+      <span class="k">return</span> <span class="n">result</span>
+</code></pre></div></div>
+<blockquote>
+  <p>执行用时: 64 ms, 在Unique Binary Search Trees的Python3提交中击败了5.19% 的用户</p>
+
+  <p>内存消耗: 13.1 MB, 在Unique Binary Search Trees的Python3提交中击败了0.00% 的用户</p>
+</blockquote>

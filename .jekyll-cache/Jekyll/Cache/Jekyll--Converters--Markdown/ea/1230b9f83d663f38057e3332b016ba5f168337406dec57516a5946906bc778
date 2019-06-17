@@ -1,0 +1,121 @@
+I"Y#<h1 id="a-查询-select">A. 查询 SELECT</h1>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="p">[</span><span class="k">all</span><span class="o">|</span><span class="k">distinct</span><span class="p">]</span> <span class="n">select_expr</span><span class="p">,</span><span class="n">select_expr</span><span class="p">,...</span>
+  <span class="k">from</span> <span class="n">table_reference</span>
+  <span class="p">[</span><span class="k">where</span> <span class="n">wher_condition</span><span class="p">]</span>
+  <span class="p">[</span><span class="k">group</span> <span class="k">by</span> <span class="n">col_list</span><span class="p">]</span>
+  <span class="p">[</span><span class="k">order</span> <span class="k">by</span> <span class="n">order_condition</span><span class="p">]</span>
+  <span class="p">[</span><span class="n">distribute</span> <span class="k">by</span> <span class="n">distribute_condition</span> <span class="p">[</span><span class="n">sort</span> <span class="k">by</span> <span class="n">sort_condition</span><span class="p">]]</span>
+  <span class="p">[</span><span class="k">limit</span> <span class="n">number</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>注意:</p>
+<ul>
+  <li>列可以用列名指定,*代表所有的列</li>
+  <li>支持嵌套子查询,但子查询必须要有别名(有了别名就和表差不多了)</li>
+  <li>子查询可以和其他表,或者互相之间join</li>
+</ul>
+
+<h1 id="b-更新-insert-intooverwrite">B. 更新 INSERT INTO/OVERWRITE</h1>
+
+<h3 id="对普通表或静态分区">对普通表或静态分区:</h3>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">insert</span> <span class="n">overwrite</span><span class="err">\</span><span class="k">into</span> <span class="k">table</span> <span class="n">tablename</span> <span class="p">[</span><span class="n">partition</span><span class="p">(</span><span class="n">partcol1</span><span class="o">=</span><span class="n">val1</span><span class="p">,</span><span class="n">partcol2</span><span class="o">=</span><span class="n">val2</span><span class="p">,...)]</span>
+<span class="n">select_statement</span>
+<span class="k">from</span> <span class="n">from_statement</span>
+</code></pre></div></div>
+
+<h3 id="对普通表或静态分区-1">对普通表或静态分区:</h3>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">insert</span> <span class="n">overwrite</span> <span class="k">table</span> <span class="n">tablename</span> <span class="n">partition</span> <span class="p">(</span><span class="n">partcol1</span><span class="p">,</span><span class="n">partcol2</span><span class="p">,...)</span>
+<span class="n">select_statement</span> <span class="k">from</span> <span class="n">from_statement</span>
+</code></pre></div></div>
+
+<p>注意:</p>
+<ul>
+  <li>与sql不同,必须写表名</li>
+  <li>不支持用value插一行数据</li>
+  <li>知道具体插到哪个分区,用静态插;横跨多个分区,动态插</li>
+  <li>如果目标表有多级分区,insert时允许部分静态,但静态分区必须是高级分区(高级分区指定插,低级分区动态插)</li>
+  <li>动态生成的分区键不能为NULL</li>
+</ul>
+
+<h3 id="多路输出-multi-insert">多路输出 MULTI INSERT:</h3>
+
+<p>从一个表读,写到多个表中.即”一读多写”</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">from</span> <span class="n">from_statement</span>
+<span class="k">insert</span> <span class="n">overwrite</span><span class="err">\</span><span class="k">into</span> <span class="k">table</span> <span class="n">tablename1</span> <span class="p">[</span><span class="n">partition</span><span class="p">(</span><span class="n">partcol1</span><span class="o">=</span><span class="n">val1</span><span class="p">,</span><span class="n">partcol2</span><span class="o">=</span><span class="n">val2</span><span class="p">,...)]</span>
+  <span class="n">select_statement</span>
+<span class="p">[</span><span class="k">insert</span> <span class="n">overwrite</span><span class="err">\</span><span class="k">into</span> <span class="k">table</span> <span class="n">tablename2</span> <span class="p">[</span><span class="n">partition</span><span class="p">...]</span>
+  <span class="n">select_statement2</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>注意:</p>
+<ul>
+  <li>单个SQL最多写256路输出</li>
+  <li>对未分区表的表,或分区表的分区都不能作为目标出现多次</li>
+  <li>对同一张表的不同分区,不能同时overwrite和into</li>
+</ul>
+
+<h1 id="c-表关联-join">C. 表关联 JOIN</h1>
+
+<p>关联方式:</p>
+<ul>
+  <li>左连接 left outer join: 返回LEFT</li>
+  <li>右连接 right outer join: 返回RIGHT</li>
+  <li>内连接 inner join: 返回交集</li>
+  <li>全连接 full outer join: 返回并集</li>
+</ul>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="p">[</span><span class="n">t1</span><span class="p">.</span><span class="n">col_name</span><span class="p">]</span>
+       <span class="p">[</span><span class="n">t2</span><span class="p">.</span><span class="n">col_name</span><span class="p">]</span>
+       <span class="p">...</span>
+  <span class="k">from</span> <span class="o">&lt;</span><span class="n">tab_name1</span><span class="o">&gt;</span> <span class="n">t1</span> <span class="p">[</span><span class="k">left</span> <span class="k">outer</span><span class="p">]</span> <span class="k">join</span> <span class="o">&lt;</span><span class="n">tab_name2</span><span class="o">&gt;</span> <span class="n">t2</span> <span class="k">on</span> <span class="o">&lt;</span><span class="p">[</span><span class="n">t1</span><span class="p">.</span><span class="n">col_name</span> <span class="o">=</span><span class="n">t2</span><span class="p">.</span><span class="n">col_name</span><span class="p">][</span><span class="k">and</span> <span class="n">t1</span><span class="p">.</span><span class="n">col_name</span> <span class="o">=</span><span class="n">t2</span><span class="p">.</span><span class="n">col_name</span><span class="p">]...</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<p>注意:</p>
+<ul>
+  <li>只允许and连接的等值条件</li>
+  <li>最多支持16路join</li>
+</ul>
+
+<h2 id="mapjoin">MAPJOIN</h2>
+<ul>
+  <li>使用情景: 一个大表和一个或一群小表做join</li>
+  <li>基本原理: 把小表全丢内存里,加快join</li>
+  <li>注意事项:
+    <ul>
+      <li>左(右)连接,左(右)表必须是大表</li>
+      <li>内连接都可以做大表</li>
+      <li>全连接不能用MAPJOIN</li>
+      <li>小表可以为子查询</li>
+      <li>引用小表或子查询,需要使用别名</li>
+      <li>可以使用不等值连接或or</li>
+      <li>最多制定6张小表</li>
+      <li>小表占内存不超过2G</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="分支表达式-case-when">分支表达式 CASE WHEN</h2>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CASE</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span>
+  <span class="k">WHEN</span> <span class="o">&lt;</span><span class="n">condition_1</span><span class="o">&gt;</span> <span class="k">then</span> <span class="o">&lt;</span><span class="n">result_1</span><span class="o">&gt;</span>
+  <span class="k">WHEN</span> <span class="o">&lt;</span><span class="n">condition_1</span><span class="o">&gt;</span> <span class="k">then</span> <span class="o">&lt;</span><span class="n">result_1</span><span class="o">&gt;</span>
+  <span class="p">...</span>
+  <span class="k">else</span> <span class="o">&lt;</span><span class="n">result_1</span><span class="o">&gt;</span>
+<span class="k">END</span>
+</code></pre></div></div>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CASE</span>
+  <span class="k">WHEN</span> <span class="o">&lt;</span><span class="n">condition_1</span><span class="o">&gt;</span> <span class="k">then</span> <span class="o">&lt;</span><span class="n">result_1</span><span class="o">&gt;</span>
+  <span class="k">WHEN</span> <span class="o">&lt;</span><span class="n">condition_1</span><span class="o">&gt;</span> <span class="k">then</span> <span class="o">&lt;</span><span class="n">result_1</span><span class="o">&gt;</span>
+  <span class="p">...</span>
+  <span class="k">else</span> <span class="o">&lt;</span><span class="n">result_1</span><span class="o">&gt;</span>
+<span class="k">END</span>
+</code></pre></div></div>
+
+<p>注意:</p>
+<ul>
+  <li>如果不一致,返回结果类型会变得一致</li>
+  <li>非贪婪返回结果,碰到满足就返回</li>
+</ul>
+:ET

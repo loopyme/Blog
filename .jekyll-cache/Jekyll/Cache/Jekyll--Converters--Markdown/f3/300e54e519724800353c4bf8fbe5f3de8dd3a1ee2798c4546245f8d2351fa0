@@ -1,0 +1,61 @@
+I"s<h3 id="a-项目信息">A. 项目信息</h3>
+
+<p>该项目为2018年秋季数据科学课程的final project,也可以点击<a href="http://file.loopy.tech/release/teach_computer_to_identify_teachers/DS.html">此处</a>查看 @B@L@O@C@K@E@D@ 这门课程的其他作业。</p>
+
+<p>主要目的是识别重庆大学计算机学院老师的面部特征。</p>
+<h3 id="b-技术步骤">B. 技术步骤</h3>
+
+<p>在本项目中，你会看到：</p>
+<ol>
+  <li><a href="http://file.loopy.tech/release/teach_computer_to_identify_teachers/get_data.html">使用爬虫获取老师的详细信息及照片</a></li>
+  <li><a href="http://file.loopy.tech/release/teach_computer_to_identify_teachers/align.html">使用预训练的FaceNet-MTCNN模型来对图像进行人脸检测和对齐</a></li>
+  <li><a href="http://file.loopy.tech/release/teach_computer_to_identify_teachers/demo.html">将预训练的FaceNet模型发布到嵌入式平台(Movidius NCS)上,并完成查询系统的Demo</a></li>
+</ol>
+
+<h3 id="c参考文档和代码">C.参考文档和代码</h3>
+
+<ol>
+  <li>Facenet的源码及预训练模型：https://github.com/davidsandberg/facenet （MIT License）</li>
+  <li>Facenet源码解析：https://blog.csdn.net/u013044310/article/details/79556099</li>
+  <li>NCSDK：https://github.com/movidius/ncsdk （Apache2.0 License）</li>
+  <li>LFW数据集： http://vis-www.cs.umass.edu/lfw/lfw.tgz
+ http://www.cs.columbia.edu/CAVE/databases/pubfig/download/lfw_attributes.txt</li>
+  <li>NCS的调用：https://github.com/movidius/ncappzoo</li>
+</ol>
+
+<h3 id="d训练及测试环境的声明">D.训练及测试环境的声明</h3>
+<p>1.开发环境（Colab）</p>
+<ul>
+  <li>Ubuntu14.04</li>
+  <li>处理器：Intel®  Xeon® CPU @ 2.30GHz *2</li>
+  <li>图形：Tesla K80</li>
+</ul>
+
+<p>2.本地环境</p>
+<ul>
+  <li>Ubuntu18.04</li>
+  <li>处理器：Intel® Core™ i5-7200U CPU @ 2.50GHz × 4</li>
+  <li>图形：Intel® HD Graphics 620 (Kaby Lake GT2)</li>
+  <li>安装有NCSDK，caffe，tensorflow框架</li>
+</ul>
+
+<p>3.测试环境 (本地虚拟机，用于模拟Raspberry Pi 3 Model B+)</p>
+<ul>
+  <li>Ubuntu14.04</li>
+  <li>内存：1GB</li>
+  <li>摄像头像素：640.0 x 480.0</li>
+  <li>算力扩展卡：Intel Movidius Neural Compute Stick1(参考算力：100Gflops 功率：1w)</li>
+  <li>环境配置时安装了NCSDK，caffe，tensorflow框架</li>
+</ul>
+
+<h3 id="e其他声明">E.其他声明</h3>
+<ol>
+  <li>所有的数据及数据使用均以学习交流为目的，而非营利。</li>
+  <li>爬虫获取的信息是来自2018-10-03的重庆大学计算机学院主页（http://www.cs.cqu.edu.cn/ ）上的公开数据和信息</li>
+  <li>本项目使用MIT License</li>
+</ol>
+
+<p>若需下载源码，可见http://file.loopy.tech/release/teach_computer_to_identify_teachers/src.tar.xz</p>
+
+<p>若需下载测试包，可见http://file.loopy.tech/release/teach_computer_to_identify_teachers/testbag.tar.xz</p>
+:ET

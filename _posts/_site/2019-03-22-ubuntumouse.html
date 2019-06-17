@@ -1,0 +1,31 @@
+<h2 id="问题描述">问题描述</h2>
+
+<ol>
+  <li>软硬件环境
+    <ul>
+      <li>Controller: TninkPad-E470-BlueTooth4.1</li>
+      <li>Device: Microsoft Sculpt Comfort Mouse</li>
+      <li>OS: Ubuntu18.04</li>
+    </ul>
+  </li>
+  <li>问题复现情景
+    <ul>
+      <li>蓝牙重启后不自动连接到鼠标,需要手动配对连接</li>
+      <li>连接后暂停使用鼠标直至休眠(5min左右),即断开连接,无法自动重连</li>
+      <li>只有鼠标出现异常,键盘,耳机均无异常</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="问题解决">问题解决</h2>
+
+<ol>
+  <li>在终端里打开蓝牙控制器: <code class="highlighter-rouge">bluetoothctl</code></li>
+  <li>显示可用列表,查看鼠标mac: <code class="highlighter-rouge">devices</code></li>
+  <li>Trust你的鼠标:(trust后面是你的鼠标mac)<code class="highlighter-rouge">trust 70:F0:87:23:FB:F4</code></li>
+  <li>要是还不行,就<code class="highlighter-rouge">sudo apt-get install pulseaudio-module-bluetooth</code></li>
+</ol>
+
+<p>搞定!(试了一万种方法,结果trust就够了…)</p>
+
+<p>教训: 在网上的其他调整方法没穷尽之前,千万别去碰无辜的驱动!!!</p>
