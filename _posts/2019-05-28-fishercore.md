@@ -7,7 +7,8 @@ author:     Loopy
 header-img: img/home-bg-geek.jpg
 catalog: true
 tags:
-    - Data
+    - ML
+    - AI
 
 ---
 

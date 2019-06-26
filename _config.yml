@@ -14,7 +14,7 @@ markdown: kramdown
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: "No fun, go die."
-sidebar-avatar: http://file.loopy.tech/share/logo.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: http://file.loopy.tech/pic/logo-loopy.png      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
