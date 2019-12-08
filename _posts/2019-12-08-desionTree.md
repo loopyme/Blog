@@ -1,7 +1,7 @@
 ---
 layout:     post
 title: 一种回归决策树的快速遍历划分算法
-subtitle: 基于mips实现,使用python进行测试
+subtitle: 备忘录的思想快速寻找最优划分
 date:       2019-12-08
 author:     Loopy
 header-img: img/home-bg-geek.jpg
@@ -23,15 +23,17 @@ tags:
 </script>
 
 ## 问题的提出
+
 众所周知,建立CART树有一个关键步骤:**遍历数据空间中的所有划分界限,寻找最优切分特征$\alpha$与阈值$c$**,以最小化分出的两个集合的方差,也就是下面这个式子:
 
 $$\min\limits_{\alpha,c}{[\sum_{x_i[\alpha]<c}{(y_i-\bar{y_1})}^2+\sum_{x_i[\alpha]>c}{(y_i-\bar{y_2})}^2]}$$
 
 其中, $\bar{y_1},\bar{y_2}$分别是$x_i[\alpha]<c,x_i[\alpha]>c$样本点的y均值.
 
-问题在于,经典的CART树要遍历所有划分界限,上面的最小化式就需要计算$n_sample \times n_feature$次,而使用备忘录的思想,并将最小化式变形,可以极大地提升性能.
+问题在于,经典的CART树要遍历所有划分界限,上面的最小化式就需要计算$n_{sample} \times n_{feature}$次,而使用备忘录的思想,并将最小化式化简,可以极大地提升性能.
 
 ## 算法思路
+
 首先,拎出一个方差式来变形
 $$
 \begin{aligned}
@@ -48,18 +50,18 @@ $$
 
 $$
 \begin{aligned}
-
 J&=\min\limits_{\alpha,c}{[\sum_{(x,y) \in L}{(y-\bar{y_1})}^2+\sum_{(x,y) \in R}{(y-\bar{y_2})}^2]}\\
 &=\min\limits_{\alpha,c}{[\sum{y^2}-\frac{(\sum_{(x,y) \in L}{y})^2}{n_{L}}-\frac{(\sum_{(x,y) \in R}{y})^2}{n_{R}}]}\\
 &=\sum{y^2} + \max\limits_{\alpha,c}{[\frac{(\sum_{(x,y) \in L}{y})^2}{n_{L}}+\frac{(\sum_{(x,y) \in R}{y})^2}{n_{R}}]}
 \end{aligned}
 $$
-由于$\sum{y^2}$对任意划分都相同,故我们现在只需要$\max\limits_{\alpha,c}{[\frac{(\sum_{(x,y) \in L}{y})^2}{n_{L}}+\frac{(\sum_{(x,y) \in R}{y})^2}{n_{R}}]}$
 
-得到这个式子以后,我们就知道了,每一次迭代,只需要获知两个集合中样本点个数和样本点y的和就好了,由此就可以使用备忘录的思想了
+由于$\sum{y^2}$对任意划分都相同,故我们现在只需要$\max\limits_{\alpha,c}{[\frac{(\sum_{(x,y) \in L}{y})^2}{n_{L}}+\frac{(\sum_{(x,y) \in R}{y})^2}{n_{R}}]}$得到这个式子以后,我们就知道了,每一次迭代,只需要获知两个集合中样本点个数和样本点y的和就足够了,而无需重新计算方差,由此就可以使用备忘录的思想了,能获得极大性能提升.
 
 ## 算法代码:
+
 > 完整决策树见: [cquai-ml/DecisionTreeRegressor](https://github.com/CQU-AI/ML-Algorithm/blob/master/cquai_ml/DecisionTreeRegressor.py)
+
 ```python
 def _build_tree(self, X, y, cur_depth, parent, is_left):
     if cur_depth == self.max_depth:
@@ -94,4 +96,5 @@ def _build_tree(self, X, y, cur_depth, parent, is_left):
                 best_left_ind, best_right_ind = ind[: j + 1], ind[j + 1 :]
     
     # ...
+    
 ```
