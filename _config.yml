@@ -62,7 +62,7 @@ kramdown:
 
 # Gitalk
 gitalk:
-  enable: true    #是否开启Gitalk评论
+  enable: False    #是否开启Gitalk评论
   clientID: 7808941c97a2f16167b5                          #生成的clientID
   clientSecret: e273346fc0e4d781af7c11ed694c823a03611307    #生成的clientSecret
   repo: loopy.github.io    #仓库名称
