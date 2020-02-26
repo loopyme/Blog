@@ -22,6 +22,8 @@ tags:
 <script type="text/javascript" async src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
 </script>
 
+> 代码仓库: [ML-Algorithm](https://github.com/CQU-AI/ML-Algorithm)
+
 ## 问题的提出
 
 众所周知,建立CART树有一个关键步骤:**遍历数据空间中的所有划分界限,寻找最优切分特征$\alpha$与阈值$c$**,以最小化分出的两个集合的方差,也就是下面这个式子:
