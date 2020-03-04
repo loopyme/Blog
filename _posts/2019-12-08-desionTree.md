@@ -1,7 +1,7 @@
 ---
 layout:     post
 title: 一种回归决策树的快速遍历划分算法
-subtitle: 备忘录的思想快速寻找最优划分
+subtitle: A Fast Traversal Partition Algorithm for CART
 date:       2019-12-08
 author:     Loopy
 header-img: img/home-bg-geek.jpg

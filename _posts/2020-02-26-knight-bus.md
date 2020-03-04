@@ -1,6 +1,6 @@
 ---
 layout:     post
-title: knight-bus:一个Python对象传输器
+title: knight-bus:Transport Python Objects from One Process(or computer) to Another
 subtitle: 在不同设备(进程)间安全无损的传递Python对象
 date:       2020-02-26
 author:     Loopy
@@ -11,7 +11,7 @@ tags:
     - Pypi
 ---
 
-> 代码仓库: [knight-bus](https://github.com/loopyme/knight-bus)
+> Repository: [knight-bus](https://github.com/loopyme/knight-bus)
 
 
 Knight bus can **safely** and **losslessly** transport most of your python objects from one process(or computer) to another. 
