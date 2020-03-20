@@ -8,7 +8,7 @@ header-img: img/post-bg-alibaba.jpg
 catalog: true
 tags:
     - ACA-BigData
-    - Note
+
 ---
 
 >大数据计算服务（MaxCompute，原名ODPS）是阿里云的一种快速、完全托管的TB/PB级数据仓库解决方案.
