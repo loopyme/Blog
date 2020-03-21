@@ -18,8 +18,8 @@ sidebar-avatar                  : http://file.loopy.tech/pic/avatar.jpeg
 
 
 # SNS settings
-RSS                             : True
-zhihu_username                  : Loopy
+RSS                             : false
+zhihu_username                  : loopy-81
 telegram_username               : loopyme
 github_username                 : loopyme
 qq_username                     : 1144930301
