@@ -4,8 +4,8 @@ SEOTitle                        : 学习日志
 header-img                      : img/home-bg.jpg
 email                           : peter@mail.loopy.tech
 description                     : "Keep hands dirty"
-keyword                         : "LoopyTech, Blog"
-url                             : "https://loopyme.github.io/"        
+keyword                         : "LoopyTech, Blog, loopyme, loopy"
+url                             : "https://blog.loopy.tech"        
 baseurl                         : "" 
 github_repo                     : "https://github.com/loopyme/loopy.github.io.git" 
 markdown                        : kramdown
