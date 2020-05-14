@@ -14,7 +14,7 @@ markdown                        : kramdown
 # Sidebar settings
 sidebar                         : true    
 sidebar-about-description       : "Keep hands dirty"
-sidebar-avatar                  : http://file.loopy.tech/pic/avatar.jpeg
+sidebar-avatar                  : https://https://blog.loopy.tech/pic/avatar.jpeg
 
 
 # SNS settings
