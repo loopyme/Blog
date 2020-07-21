@@ -22,7 +22,7 @@ tags:
 <script type="text/javascript" async src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
 </script>
 
-> 代码仓库: [ML-Algorithm](https://github.com/CQU-AI/ML-Algorithm)
+> 本文所述算法改进实现见代码仓库: [ML-Algorithm](https://github.com/CQU-AI/ML-Algorithm)
 
 本文描述了CART决策树的一种算法改进，能在基础的CART算法上提升**样本数目**倍的性能。同时也对该算法的理论依据进行了推导，实际效果进行了测试。
 

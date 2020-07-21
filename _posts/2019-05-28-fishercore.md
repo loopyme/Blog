@@ -2,7 +2,7 @@
 layout:     post
 title: Mathematics of a Model Predicting Happiness
 subtitle: Fisher假设检验方法用于多分类问题评分的思考
-date:       2019-05-28
+date:       2019-09-19
 author:     Loopy
 header-img: img/home-bg-geek.jpg
 catalog: true

@@ -11,7 +11,7 @@ tags:
     - Pypi
 ---
 
-> Repository: [knight-bus](https://github.com/loopyme/knight-bus)
+> I build this package and you can visit code repository [knight-bus](https://github.com/loopyme/knight-bus)
 
 
 Knight bus can **safely** and **losslessly** transport most of your python objects from one process(or computer) to another. 
