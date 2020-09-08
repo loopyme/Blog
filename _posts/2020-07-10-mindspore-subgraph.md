@@ -11,20 +11,7 @@ tags:
 
 ---
 
-最近一小段时间没有好玩的代码可以敲了，于是抽空参加了一个[“开源软件供应链点亮计划-暑期2020”](https://isrc.iscas.ac.cn/summer2020/#/index)，给华为的MindSpore设计一个在计算图中寻找相同子结构的算法并且写一个demo出来。
-
-## show me the code
-
-Repo主要托管在Github上，但因为计划要求需要存到软件所的一个Gitlab上，而MindSpore是托管在了Gitee上了，所以镜像挺多的，用github action自动镜像， ![Mirror](https://github.com/loopyme/mindspore_subgraph_detection/workflows/Mirror/badge.svg)：
- - Gitee： https://gitee.com/loopyme/mindspore_subgraph_detection
- - GitHub：https://github.com/loopyme/mindspore_subgraph_detection
- - GItlab：https://isrc.iscas.ac.cn/gitlab/summer2020/students/proj-2017182
-
-现在最新的Release在![GitHub release (latest by date)](https://img.shields.io/github/v/release/loopyme/mindspore_subgraph_detection)
-
-文档的话，用git page怕访问贼慢（甚至可能被墙），所以丢到了Gitee page上：https://loopyme.gitee.io/mindspore_subgraph_detection/
-
-> BTW， 该项目受到 [“开源软件供应链点亮计划-暑期2020” ](https://isrc.iscas.ac.cn/summer2020/#/index) 的资助和支持,由peter@mail.loopy.tech设计开发，由gaohan19@huawei.com指导。
+最近刷Slack，发现软件所搞了一个[“开源软件供应链点亮计划”](https://isrc.iscas.ac.cn/summer2020/#/index)，简单浏览了下发现刚好有个任务图的项目，和我前几天写的那个[任务图调度引擎](https://github.com/loopyme/Task-Graph)有异曲同工之妙，主要是给华为的MindSpore设计一个在计算图中寻找相同子结构的算法。于是果断发了个邮件了解具体信息,发现挺酷的，最终把它拿了下来,搞了几天下来现在差不多算法和demo完成了，并且发了0.1.0的release。
 
 ## 我在干啥
 
@@ -55,3 +42,16 @@ MindSpore是华为自研的深度学习框架，其中的计算图模式是一�
 主要是为了加速，同时多测试一些用例，修复一下遇到的bug：
  - [ ] 利用命名空间节点中的信息，加快第一Epoch的子图核生成
  - [ ] 尝试让子图核向上游增长
+
+## show me the code
+
+Repo主要托管在Github上，但因为计划要求需要存到软件所的一个Gitlab上，而MindSpore是托管在了Gitee上了，所以镜像挺多的，用github action自动镜像， ![Mirror](https://github.com/loopyme/mindspore_subgraph_detection/workflows/Mirror/badge.svg)：
+ - [Gitee](https://gitee.com/loopyme/mindspore_subgraph_detection)
+ - [GitHub](https://github.com/loopyme/mindspore_subgraph_detection)
+ - [GItlab](https://isrc.iscas.ac.cn/gitlab/summer2020/students/proj-2017182)
+
+现在最新的Release在![GitHub release (latest by date)](https://img.shields.io/github/v/release/loopyme/mindspore_subgraph_detection)
+
+文档的话，用git page怕访问贼慢（甚至可能被墙），所以丢到了[Gitee page](https://loopyme.gitee.io/mindspore_subgraph_detection/)上.
+
+> BTW， 该项目受到 [“开源软件供应链点亮计划-暑期2020” ](https://isrc.iscas.ac.cn/summer2020/#/index) 的资助和支持,由peter@mail.loopy.tech设计开发，由gaohan19@huawei.com指导。
